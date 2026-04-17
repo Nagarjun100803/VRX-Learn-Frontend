@@ -1,24 +1,44 @@
-import { useState } from "react";
-import AdminDashboard from "@/features/admin/pages/AdminDashboard";
-import UsersPage from "@/features/users/pages/UsersPage";
-import CoursesPage from "@/features/courses/pages/CoursesPage";
-import EnrollmentsPage from "@/features/enrollments/pages/EnrollmentsPage";
-import { TopNav } from "@/features/admin/components/TopNav";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { AdminLayout } from "@/layouts/AdminLayout";
+import { TrainerLayout } from "@/layouts/TrainerLayout";
+import { TraineeLayout } from "@/layouts/TraineeLayout";
 import { ToastProvider } from "@/components/ui/Toast";
+import { ScrollToTop } from "@/components/ScrollToTop";
 
-export default function App() {
-  const [activeTab, setActiveTab] = useState("Dashboard");
+function AppContent() {
+  const { role } = useAuth();
 
   return (
-    <ToastProvider>
-      <div className="min-h-screen bg-bg-primary">
-        <TopNav activeTab={activeTab} onTabChange={setActiveTab} />
+    <>
+      <ScrollToTop />
+      <Routes>
+        {role === "admin" && (
+          <Route path="/admin/*" element={<AdminLayout />} />
+        )}
+        {role === "trainer" && (
+          <Route path="/trainer/*" element={<TrainerLayout />} />
+        )}
+        {role === "trainee" && (
+          <Route path="/trainee/*" element={<TraineeLayout />} />
+        )}
         
-        {activeTab === "Dashboard" && <AdminDashboard />}
-        {activeTab === "Users" && <UsersPage />}
-        {activeTab === "Courses" && <CoursesPage />}
-        {activeTab === "Enrollments" && <EnrollmentsPage />}
-      </div>
+        {/* Redirect to appropriate home based on role */}
+        <Route 
+          path="*" 
+          element={<Navigate to={role === "admin" ? "/admin" : role === "trainer" ? "/trainer" : "/trainee"} replace />} 
+        />
+      </Routes>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <ToastProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </ToastProvider>
   );
 }

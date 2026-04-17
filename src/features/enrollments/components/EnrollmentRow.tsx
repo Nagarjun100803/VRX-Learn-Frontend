@@ -5,6 +5,7 @@ import { Enrollment } from "../types";
 
 interface EnrollmentRowProps {
   enrollment: Enrollment;
+  onEdit?: (enrollment: Enrollment) => void;
 }
 
 const roleStyles = {
@@ -38,7 +39,7 @@ const formatDate = (dateString?: string | null) => {
   return `${day} ${month} ${year}`;
 };
 
-export function EnrollmentRow({ enrollment }: EnrollmentRowProps) {
+export function EnrollmentRow({ enrollment, onEdit }: EnrollmentRowProps) {
   return (
     <div className="hidden md:grid grid-cols-[1.2fr_1.2fr_100px_1.5fr_120px_120px_120px_80px] items-center p-4 hover:bg-bg-secondary transition-colors group min-h-[72px]">
       <div className="font-semibold text-text-primary truncate pr-4">{enrollment.name}</div>
@@ -71,7 +72,12 @@ export function EnrollmentRow({ enrollment }: EnrollmentRowProps) {
       </div>
 
       <div className="flex items-center justify-end gap-1">
-        <Button variant="ghost" size="icon" className="size-8 text-text-secondary hover:text-text-primary">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="size-8 text-text-secondary hover:text-text-primary"
+          onClick={() => onEdit?.(enrollment)}
+        >
           <Pencil className="size-3.5" />
         </Button>
         <Button variant="ghost" size="icon" className="size-8 text-text-secondary hover:text-accent-red">

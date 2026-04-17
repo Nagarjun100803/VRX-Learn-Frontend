@@ -5,6 +5,7 @@ import { Enrollment } from "../types";
 
 interface EnrollmentCardProps {
   enrollment: Enrollment;
+  onEdit?: (enrollment: Enrollment) => void;
 }
 
 const roleStyles = {
@@ -38,7 +39,7 @@ const formatDate = (dateString?: string | null) => {
   return `${day} ${month} ${year}`;
 };
 
-export function EnrollmentCard({ enrollment }: EnrollmentCardProps) {
+export function EnrollmentCard({ enrollment, onEdit }: EnrollmentCardProps) {
   return (
     <div className="md:hidden p-4 space-y-4 hover:bg-bg-secondary transition-colors">
       <div className="flex items-start justify-between gap-4">
@@ -47,7 +48,12 @@ export function EnrollmentCard({ enrollment }: EnrollmentCardProps) {
           <div className="text-text-secondary text-xs truncate">{enrollment.email}</div>
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          <Button variant="ghost" size="icon" className="size-8 text-text-secondary">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="size-8 text-text-secondary"
+            onClick={() => onEdit?.(enrollment)}
+          >
             <Pencil className="size-3.5" />
           </Button>
           <Button variant="ghost" size="icon" className="size-8 text-text-secondary hover:text-accent-red">

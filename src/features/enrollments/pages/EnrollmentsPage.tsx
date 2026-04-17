@@ -5,8 +5,14 @@ import { EnrollmentFilters } from "../components/EnrollmentFilters";
 import { EnrollmentList } from "../components/EnrollmentList";
 import { Pagination } from "../components/Pagination";
 import { MOCK_ENROLLMENTS, Enrollment } from "../types";
+import { EnrollmentFormDialog } from "../components/EnrollmentFormDialog";
 
 export default function EnrollmentsPage() {
+  // Dialog State
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
+  const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | undefined>(undefined);
+
   // Filter States
   const [search, setSearch] = useState("");
   const [role, setRole] = useState("all");
@@ -86,6 +92,18 @@ export default function EnrollmentsPage() {
     setCurrentPage(1);
   };
 
+  const handleCreateEnrollment = () => {
+    setDialogMode("create");
+    setSelectedEnrollment(undefined);
+    setIsDialogOpen(true);
+  };
+
+  const handleEditEnrollment = (enrollment: Enrollment) => {
+    setDialogMode("edit");
+    setSelectedEnrollment(enrollment);
+    setIsDialogOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-bg-primary font-sans selection:bg-accent-blue/10">
       <main className="container-vercel py-12 space-y-8">
@@ -110,8 +128,9 @@ export default function EnrollmentsPage() {
               <span className="hidden sm:inline">Export CSV</span>
             </Button>
             <Button 
-              className="h-9 px-3 sm:px-4" 
+              className="h-9 px-3 sm:px-4 bg-text-primary text-bg-primary hover:bg-text-primary/90" 
               aria-label="New Enrollment"
+              onClick={handleCreateEnrollment}
             >
               <Plus className="size-4 sm:mr-2" />
               <span className="hidden sm:inline">New Enrollment</span>
@@ -132,7 +151,11 @@ export default function EnrollmentsPage() {
           />
 
           <div className="space-y-0">
-            <EnrollmentList enrollments={paginatedEnrollments} onClearFilters={handleClearFilters} />
+            <EnrollmentList 
+              enrollments={paginatedEnrollments} 
+              onClearFilters={handleClearFilters} 
+              onEdit={handleEditEnrollment}
+            />
             {totalItems > 0 && (
               <Pagination
                 currentPage={currentPage}
@@ -146,6 +169,23 @@ export default function EnrollmentsPage() {
           </div>
         </section>
       </main>
+
+      <EnrollmentFormDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        mode={dialogMode}
+        initialData={selectedEnrollment ? {
+          id: selectedEnrollment.id,
+          userId: selectedEnrollment.userId,
+          name: selectedEnrollment.name,
+          email: selectedEnrollment.email,
+          role: selectedEnrollment.role,
+          courseId: selectedEnrollment.courseId,
+          courseName: selectedEnrollment.courseName,
+          status: selectedEnrollment.status,
+          expireAt: selectedEnrollment.expireAt,
+        } : undefined}
+      />
     </div>
   );
 }

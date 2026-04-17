@@ -7,9 +7,10 @@ import { EmptyState } from "./EmptyState";
 interface CoursesListProps {
   courses: Course[];
   onClearFilters: () => void;
+  onEdit?: (course: Course) => void;
 }
 
-export function CoursesList({ courses, onClearFilters }: CoursesListProps) {
+export function CoursesList({ courses, onClearFilters, onEdit }: CoursesListProps) {
   if (courses.length === 0) {
     return (
       <Card className="w-full">
@@ -33,8 +34,8 @@ export function CoursesList({ courses, onClearFilters }: CoursesListProps) {
       <div className="divide-y divide-border-subtle">
         {courses.map((course) => (
           <div key={course.id}>
-            <CourseRow course={course} />
-            <CourseCard course={course} />
+            <CourseRow course={course} onEdit={onEdit} />
+            <CourseCard course={course} onEdit={onEdit} />
           </div>
         ))}
       </div>

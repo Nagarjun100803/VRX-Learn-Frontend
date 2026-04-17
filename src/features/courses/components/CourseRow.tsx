@@ -1,9 +1,11 @@
+import { useNavigate } from "react-router-dom";
 import { Eye, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Course } from "../types";
 
 interface CourseRowProps {
   course: Course;
+  onEdit?: (course: Course) => void;
 }
 
 const formatDate = (dateString: string) => {
@@ -14,12 +16,20 @@ const formatDate = (dateString: string) => {
   return `${day} ${month} ${year}`;
 };
 
-export function CourseRow({ course }: CourseRowProps) {
+export function CourseRow({ course, onEdit }: CourseRowProps) {
+  const navigate = useNavigate();
   const description = course.shortDescription ?? "No short description provided.";
+
+  const handleNavigate = () => {
+    navigate(`/admin/courses/${course.id}`);
+  };
 
   return (
     <div className="hidden md:grid grid-cols-[1fr_250px_140px_100px_120px_100px] items-center p-4 hover:bg-bg-secondary transition-colors group min-h-[72px]">
-      <div className="font-semibold text-text-primary line-clamp-2 break-words pr-4 min-w-0">
+      <div 
+        onClick={handleNavigate}
+        className="font-semibold text-text-primary line-clamp-2 break-words pr-4 min-w-0 cursor-pointer hover:text-accent-blue transition-colors"
+      >
         {course.title}
       </div>
       
@@ -46,10 +56,20 @@ export function CourseRow({ course }: CourseRowProps) {
       <div className="text-text-secondary text-xs w-[120px]">{formatDate(course.createdAt)}</div>
 
       <div className="flex items-center justify-end gap-1 w-[100px]">
-        <Button variant="ghost" size="icon" className="size-8 text-text-secondary hover:text-text-primary">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="size-8 text-text-secondary hover:text-text-primary"
+          onClick={handleNavigate}
+        >
           <Eye className="size-3.5" />
         </Button>
-        <Button variant="ghost" size="icon" className="size-8 text-text-secondary hover:text-text-primary">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="size-8 text-text-secondary hover:text-text-primary"
+          onClick={() => onEdit?.(course)}
+        >
           <Pencil className="size-3.5" />
         </Button>
         <Button variant="ghost" size="icon" className="size-8 text-text-secondary hover:text-accent-red">

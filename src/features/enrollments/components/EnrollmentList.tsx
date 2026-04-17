@@ -7,9 +7,10 @@ import { EmptyState } from "./EmptyState";
 interface EnrollmentListProps {
   enrollments: Enrollment[];
   onClearFilters: () => void;
+  onEdit?: (enrollment: Enrollment) => void;
 }
 
-export function EnrollmentList({ enrollments, onClearFilters }: EnrollmentListProps) {
+export function EnrollmentList({ enrollments, onClearFilters, onEdit }: EnrollmentListProps) {
   if (enrollments.length === 0) {
     return (
       <Card className="w-full">
@@ -35,8 +36,8 @@ export function EnrollmentList({ enrollments, onClearFilters }: EnrollmentListPr
       <div className="divide-y divide-border-subtle">
         {enrollments.map((enrollment) => (
           <div key={enrollment.id}>
-            <EnrollmentRow enrollment={enrollment} />
-            <EnrollmentCard enrollment={enrollment} />
+            <EnrollmentRow enrollment={enrollment} onEdit={onEdit} />
+            <EnrollmentCard enrollment={enrollment} onEdit={onEdit} />
           </div>
         ))}
       </div>

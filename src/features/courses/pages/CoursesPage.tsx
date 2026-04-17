@@ -4,9 +4,15 @@ import { Button } from "@/components/ui/button";
 import { CoursesFilters } from "../components/CoursesFilters";
 import { CoursesList } from "../components/CoursesList";
 import { Pagination } from "../components/Pagination";
+import { CreateCourseDialog } from "../components/CreateCourseDialog";
 import { MOCK_COURSES, Course } from "../types";
 
 export default function CoursesPage() {
+  // Dialog State
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
+  const [selectedCourse, setSelectedCourse] = useState<Course | undefined>(undefined);
+
   // Filter States
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("name-asc");
@@ -74,6 +80,18 @@ export default function CoursesPage() {
     setCurrentPage(1);
   };
 
+  const handleCreateCourse = () => {
+    setDialogMode("create");
+    setSelectedCourse(undefined);
+    setIsDialogOpen(true);
+  };
+
+  const handleEditCourse = (course: Course) => {
+    setDialogMode("edit");
+    setSelectedCourse(course);
+    setIsDialogOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-bg-primary font-sans selection:bg-accent-blue/10">
       <main className="container-vercel py-12 space-y-8">
@@ -98,8 +116,9 @@ export default function CoursesPage() {
               <span className="hidden sm:inline">Export CSV</span>
             </Button>
             <Button 
-              className="h-9 px-3 sm:px-4" 
+              className="h-9 px-3 sm:px-4 bg-text-primary text-bg-primary hover:bg-text-primary/90" 
               aria-label="New Course"
+              onClick={handleCreateCourse}
             >
               <Plus className="size-4 sm:mr-2" />
               <span className="hidden sm:inline">New Course</span>
@@ -116,7 +135,11 @@ export default function CoursesPage() {
           />
 
           <div className="space-y-0">
-            <CoursesList courses={paginatedCourses} onClearFilters={handleClearFilters} />
+            <CoursesList 
+              courses={paginatedCourses} 
+              onClearFilters={handleClearFilters} 
+              onEdit={handleEditCourse}
+            />
             {totalItems > 0 && (
               <Pagination
                 currentPage={currentPage}
@@ -130,6 +153,20 @@ export default function CoursesPage() {
           </div>
         </section>
       </main>
+
+      <CreateCourseDialog 
+        isOpen={isDialogOpen} 
+        onClose={() => setIsDialogOpen(false)} 
+        mode={dialogMode}
+        initialData={selectedCourse ? {
+          id: selectedCourse.id,
+          title: selectedCourse.title,
+          shortDescription: selectedCourse.shortDescription,
+          longDescription: selectedCourse.longDescription,
+          trainerId: selectedCourse.trainerId,
+          trainerName: selectedCourse.trainerName,
+        } : undefined}
+      />
     </div>
   );
 }

@@ -24,22 +24,23 @@ export function UsersFilters({
   onStatusChange,
 }: UsersFiltersProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto_auto] gap-3 md:gap-4 p-4 bg-bg-primary shadow-border rounded-card">
-      <div className="relative">
+    <div className="flex flex-col md:flex-row gap-3 md:gap-4 p-4 bg-bg-primary shadow-border rounded-card md:items-center">
+      <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-text-secondary" />
         <Input
           placeholder="Search by name or email"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-9 h-9"
+          className="pl-9 h-9 w-full"
         />
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
+      <div className="flex flex-col sm:flex-row gap-3 md:gap-4 shrink-0">
         <select
           value={role}
           onChange={(e) => onRoleChange(e.target.value)}
-          className="h-9 min-w-[140px] bg-bg-primary shadow-border rounded-button px-3 text-sm outline-none focus:ring-focus transition-all"
+          className="h-9 min-w-[140px] bg-bg-primary shadow-border rounded-button px-3 text-sm outline-none focus:ring-focus transition-all cursor-pointer appearance-none pr-8"
+          style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%23666\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1rem' }}
         >
           <option value="all">All Roles</option>
           <option value="admin">Admin</option>
@@ -50,7 +51,8 @@ export function UsersFilters({
         <select
           value={sortBy}
           onChange={(e) => onSortChange(e.target.value)}
-          className="h-9 min-w-[140px] bg-bg-primary shadow-border rounded-button px-3 text-sm outline-none focus:ring-focus transition-all"
+          className="h-9 min-w-[140px] bg-bg-primary shadow-border rounded-button px-3 text-sm outline-none focus:ring-focus transition-all cursor-pointer appearance-none pr-8"
+          style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%23666\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1rem' }}
         >
           <option value="newest">Newest First</option>
           <option value="oldest">Oldest First</option>
@@ -62,7 +64,8 @@ export function UsersFilters({
         <select
           value={status}
           onChange={(e) => onStatusChange(e.target.value)}
-          className="h-9 min-w-[120px] bg-bg-primary shadow-border rounded-button px-3 text-sm outline-none focus:ring-focus transition-all"
+          className="h-9 min-w-[120px] bg-bg-primary shadow-border rounded-button px-3 text-sm outline-none focus:ring-focus transition-all cursor-pointer appearance-none pr-8"
+          style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%23666\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1rem' }}
         >
           <option value="active">Active</option>
         </select>
