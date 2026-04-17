@@ -21,7 +21,7 @@ export const MOCK_TRAINER_KPIS: TrainerKPIs = {
 
 export const MOCK_TRAINER_COURSES: TrainerCourse[] = [
   {
-    courseId: "c1",
+    courseId: "C-1",
     courseName: "Advanced FastAPI Architecture: Scalable Microservices",
     shortDescription: "Learn how to build, deploy and scale Python microservices using the FastAPI framework. Covers dependency injection, background tasks, and high-performance design patterns.",
     totalTrainees: 450,
@@ -31,7 +31,7 @@ export const MOCK_TRAINER_COURSES: TrainerCourse[] = [
     thumbnailUrl: null,
   },
   {
-    courseId: "c2",
+    courseId: "C-2",
     courseName: "Introduction to Mainframe Modernization",
     shortDescription: "A strategic overview of transforming legacy systems to modern cloud architectures. Discusses refactoring vs re-hosting strategies.",
     totalTrainees: 120,
@@ -41,7 +41,7 @@ export const MOCK_TRAINER_COURSES: TrainerCourse[] = [
     thumbnailUrl: null,
   },
   {
-    courseId: "c3",
+    courseId: "C-3",
     courseName: "Async Python in Production",
     shortDescription: "Master asynchronous programming to improve throughput and response times in your backend services.",
     totalTrainees: 215,
@@ -51,7 +51,7 @@ export const MOCK_TRAINER_COURSES: TrainerCourse[] = [
     thumbnailUrl: null,
   },
   {
-    courseId: "c4",
+    courseId: "C-4",
     courseName: "System Design for Global Scale",
     shortDescription: "Architectural principles for systems that handle millions of users across multiple regions.",
     totalTrainees: 340,
@@ -61,7 +61,7 @@ export const MOCK_TRAINER_COURSES: TrainerCourse[] = [
     thumbnailUrl: null,
   },
   {
-    courseId: "c5",
+    courseId: "C-5",
     courseName: "Frontend Engineering with Next.js",
     shortDescription: "Building performant web applications with React Server Components, Streaming, and PPR.",
     totalTrainees: 890,
@@ -71,7 +71,7 @@ export const MOCK_TRAINER_COURSES: TrainerCourse[] = [
     thumbnailUrl: null,
   },
   {
-    courseId: "c6",
+    courseId: "C-6",
     courseName: "Cloud-Native Security",
     shortDescription: "Deep dive into securing containerized workloads and cloud infrastructure using modern DevSecOps tools.",
     totalTrainees: 155,
@@ -81,7 +81,7 @@ export const MOCK_TRAINER_COURSES: TrainerCourse[] = [
     thumbnailUrl: null,
   },
   {
-    courseId: "c7",
+    courseId: "C-7",
     courseName: "Data Engineering Pipelines",
     shortDescription: "Build scalable ETL processes with Apache Spark, Delta Lake, and modern data warehouse architectures.",
     totalTrainees: 275,
@@ -91,7 +91,7 @@ export const MOCK_TRAINER_COURSES: TrainerCourse[] = [
     thumbnailUrl: null,
   },
   {
-    courseId: "c8",
+    courseId: "C-8",
     courseName: "Technical Leadership for Engineers",
     shortDescription: "Transition from individual contributor to engineering manager. Learn about scaling culture, feedback loops, and team dynamics.",
     totalTrainees: 92,

@@ -4,6 +4,7 @@ import { ProfileDropdown } from "@/features/admin/components/ProfileDropdown";
 import TrainerDashboard from "@/features/trainer/pages/TrainerDashboard";
 import { CourseOverviewPage } from "@/features/trainer/pages/CourseOverviewPage";
 import { TraineeRosterPage } from "@/features/trainer/pages/TraineeRosterPage";
+import { CourseContentPage } from "@/features/trainer/pages/CourseContentPage";
 
 export function TrainerLayout() {
   return (
@@ -27,6 +28,10 @@ export function TrainerLayout() {
         <Route index element={<TrainerDashboard />} />
         <Route path="courses/:courseId" element={<CourseOverviewPage />} />
         <Route path="courses/:courseId/trainees" element={<TraineeRosterPage />} />
+        <Route path="courses/:courseId/content" element={<CourseContentPage />} />
+        <Route path="courses/:courseId/modules" element={<CourseContentPage />} />
+        <Route path="courses/:courseId/modules/:moduleId" element={<CourseContentPage />} />
+        <Route path="courses/:courseId/assignments" element={<CourseContentPage />} />
         <Route path="*" element={<Navigate to="" replace />} />
       </Routes>
     </div>
