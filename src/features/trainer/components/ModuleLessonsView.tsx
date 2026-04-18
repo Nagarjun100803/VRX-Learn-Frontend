@@ -34,6 +34,7 @@ import { Lesson, Module } from "@/types";
 import { motion } from "motion/react";
 import { useToast } from "@/hooks/useToast";
 import { db } from "@/db";
+import { LessonDialog } from "./LessonDialog";
 
 interface ModuleLessonsViewProps {
   module: Module;
@@ -79,9 +80,28 @@ export function ModuleLessonsView({ module, lessons: initialLessons, isAdmin }: 
   const { toast } = useToast();
   const isReorderingRef = useRef(false);
 
+  const [isLessonDialogOpen, setIsLessonDialogOpen] = useState(false);
+  const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
+
+  const refreshLessons = () => {
+    if (module.id) {
+      setLessons(db.getLessonsByModule(module.id));
+    }
+  };
+
   useEffect(() => {
     setLessons(initialLessons);
   }, [initialLessons]);
+
+  const handleOpenCreateLesson = () => {
+    setEditingLesson(null);
+    setIsLessonDialogOpen(true);
+  };
+
+  const handleOpenEditLesson = (lesson: Lesson) => {
+    setEditingLesson(lesson);
+    setIsLessonDialogOpen(true);
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -156,7 +176,10 @@ export function ModuleLessonsView({ module, lessons: initialLessons, isAdmin }: 
           </div>
           
           <div className="flex items-center gap-3">
-            <Button className="h-9 px-4 bg-text-primary text-bg-primary hover:bg-text-primary/90 font-bold text-xs rounded-button">
+            <Button 
+              onClick={handleOpenCreateLesson}
+              className="h-9 px-4 bg-text-primary text-bg-primary hover:bg-text-primary/90 font-bold text-xs rounded-button"
+            >
               <Plus className="size-4 mr-2" />
               New Lesson
             </Button>
@@ -181,7 +204,10 @@ export function ModuleLessonsView({ module, lessons: initialLessons, isAdmin }: 
           </p>
         </div>
         
-        <Button className="w-full bg-text-primary text-bg-primary h-10 font-bold text-sm rounded-button">
+        <Button 
+          onClick={handleOpenCreateLesson}
+          className="w-full bg-text-primary text-bg-primary h-10 font-bold text-sm rounded-button"
+        >
           <Plus className="size-4 mr-2" />
           New Lesson
         </Button>
@@ -218,6 +244,7 @@ export function ModuleLessonsView({ module, lessons: initialLessons, isAdmin }: 
                     lesson={lesson} 
                     isAdmin={isAdmin}
                     showHandle={showDragHandle}
+                    onEdit={() => handleOpenEditLesson(lesson)}
                   />
                 ))}
               </div>
@@ -225,6 +252,14 @@ export function ModuleLessonsView({ module, lessons: initialLessons, isAdmin }: 
           </DndContext>
         )}
       </div>
+
+      <LessonDialog 
+        isOpen={isLessonDialogOpen}
+        onClose={() => setIsLessonDialogOpen(false)}
+        moduleId={module.id}
+        lesson={editingLesson}
+        onSuccess={refreshLessons}
+      />
     </div>
   );
 }
@@ -232,11 +267,13 @@ export function ModuleLessonsView({ module, lessons: initialLessons, isAdmin }: 
 function SortableLessonRow({ 
   lesson, 
   isAdmin, 
-  showHandle 
+  showHandle,
+  onEdit
 }: { 
   lesson: Lesson; 
   isAdmin: boolean;
   showHandle: boolean;
+  onEdit: () => void;
 }) {
   const {
     attributes,
@@ -293,7 +330,7 @@ function SortableLessonRow({
 
         <div className="flex items-center gap-0.5 opacity-0 group-hover/row:opacity-100 transition-opacity">
           <ActionButton icon={<Eye className="size-4" />} tooltip="View" />
-          <ActionButton icon={<Pencil className="size-4" />} tooltip="Edit" />
+          <ActionButton icon={<Pencil className="size-4" />} tooltip="Edit" onClick={onEdit} />
           <ActionButton icon={<Trash2 className="size-4" />} tooltip="Delete" className="hover:text-accent-red hover:bg-accent-red/5" />
         </div>
       </div>
@@ -322,7 +359,10 @@ function SortableLessonRow({
         </div>
         
         <div className="flex items-center justify-end gap-3 pt-2 border-t border-border-subtle">
-           <button className="text-xs font-bold text-text-secondary flex items-center gap-1.5 px-2 py-1 pointer-events-auto">
+           <button 
+             onClick={(e) => { e.stopPropagation(); onEdit(); }}
+             className="text-xs font-bold text-text-secondary flex items-center gap-1.5 px-2 py-1 pointer-events-auto"
+           >
              <Pencil className="size-3" /> Edit
            </button>
            <button className="text-xs font-bold text-accent-red flex items-center gap-1.5 px-2 py-1 pointer-events-auto">
@@ -337,14 +377,17 @@ function SortableLessonRow({
 function ActionButton({ 
   icon, 
   tooltip, 
-  className 
+  className,
+  onClick
 }: { 
   icon: React.ReactNode; 
   tooltip?: string;
   className?: string;
+  onClick?: () => void;
 }) {
   return (
     <button 
+      onClick={onClick}
       className={`
         size-8 flex items-center justify-center rounded-button text-text-secondary 
         hover:text-text-primary hover:bg-bg-secondary transition-all

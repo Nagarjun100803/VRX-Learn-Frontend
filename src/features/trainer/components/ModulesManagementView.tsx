@@ -38,9 +38,19 @@ interface ModulesManagementViewProps {
   isAdmin: boolean;
   onSelectModule: (id: string) => void;
   onBack?: () => void;
+  onCreateModule?: () => void;
+  onEditModule?: (module: Module) => void;
 }
 
-export function ModulesManagementView({ courseId, modules: initialModules, isAdmin, onSelectModule, onBack }: ModulesManagementViewProps) {
+export function ModulesManagementView({ 
+  courseId, 
+  modules: initialModules, 
+  isAdmin, 
+  onSelectModule, 
+  onBack,
+  onCreateModule,
+  onEditModule
+}: ModulesManagementViewProps) {
   const [modules, setModules] = useState<Module[]>(initialModules);
   const { toast } = useToast();
   const isReorderingRef = useRef(false);
@@ -123,7 +133,10 @@ export function ModulesManagementView({ courseId, modules: initialModules, isAdm
             <p className="text-sm text-text-secondary">Manage and organize course modules</p>
           </div>
           
-          <Button className="h-9 px-4 bg-text-primary text-bg-primary hover:bg-text-primary/90 font-bold text-xs rounded-button transition-all active:scale-95">
+          <Button 
+            onClick={onCreateModule}
+            className="h-9 px-4 bg-text-primary text-bg-primary hover:bg-text-primary/90 font-bold text-xs rounded-button transition-all active:scale-95"
+          >
             <Plus className="size-4 mr-2" />
             New Module
           </Button>
@@ -133,18 +146,19 @@ export function ModulesManagementView({ courseId, modules: initialModules, isAdm
       {/* Mobile Actions Header */}
       <div className="md:hidden p-4 space-y-4">
         {onBack && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="text-text-secondary hover:text-text-primary h-8 px-0"
+          <div 
+            className="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary cursor-pointer transition-colors"
             onClick={onBack}
           >
-            <ArrowLeft className="size-4 mr-2" />
-            Back to Course Content
-          </Button>
+            <ArrowLeft className="size-4" />
+            <span className="font-medium">Back to Course Content</span>
+          </div>
         )}
         <h1 className="text-xl font-bold text-text-primary tracking-tight">Modules</h1>
-        <Button className="w-full bg-text-primary text-bg-primary h-10 font-bold text-sm rounded-button active:scale-[0.98] transition-transform">
+        <Button 
+          onClick={onCreateModule}
+          className="w-full bg-text-primary text-bg-primary h-10 font-bold text-sm rounded-button active:scale-[0.98] transition-transform"
+        >
           <Plus className="size-4 mr-2" />
           New Module
         </Button>
@@ -182,6 +196,7 @@ export function ModulesManagementView({ courseId, modules: initialModules, isAdm
                     isAdmin={isAdmin}
                     showHandle={showDragHandle}
                     onSelect={() => onSelectModule(module.id)}
+                    onEdit={() => onEditModule?.(module)}
                   />
                 ))}
               </div>
@@ -197,12 +212,14 @@ function SortableModuleRow({
   module, 
   isAdmin, 
   showHandle,
-  onSelect
+  onSelect,
+  onEdit
 }: { 
   module: Module; 
   isAdmin: boolean;
   showHandle: boolean;
   onSelect: () => void;
+  onEdit: () => void;
 }) {
   const {
     attributes,
@@ -261,7 +278,7 @@ function SortableModuleRow({
           <ActionButton 
             icon={<Pencil className="size-4" />} 
             tooltip="Edit" 
-            onClick={(e) => e.stopPropagation()} 
+            onClick={(e) => { e.stopPropagation(); onEdit(); }} 
           />
           <ActionButton 
             icon={<Trash2 className="size-4" />} 
@@ -299,7 +316,7 @@ function SortableModuleRow({
              <Eye className="size-3" /> View
            </button>
            <button 
-             onClick={(e) => e.stopPropagation()}
+             onClick={(e) => { e.stopPropagation(); onEdit(); }}
              className="text-xs font-bold text-text-secondary flex items-center gap-1.5 px-2 py-1 pointer-events-auto"
            >
              <Pencil className="size-3" /> Edit

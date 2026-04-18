@@ -45,3 +45,18 @@ export interface CourseContentData {
   modules: Module[];
   assignments: Assignment[];
 }
+
+export type SubmissionStatus = "submitted" | "done-late" | "graded";
+
+export interface Submission {
+  id: string;
+  assignment_id: string;
+  username: string;
+  email: string;
+  attempt: number;
+  maxAttempt: number;
+  status: SubmissionStatus;
+  score: number | null;
+  maxScore: number;
+  submittedAt: string;
+}

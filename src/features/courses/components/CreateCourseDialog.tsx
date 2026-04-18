@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/useToast";
 import { UserSearchSelect } from "./UserSearchSelect";
-import { MarkdownEditor } from "./MarkdownEditor";
+import { MarkdownEditor } from "@/components/MarkdownEditor";
 
 interface CourseFormDialogProps {
   isOpen: boolean;

@@ -21,6 +21,9 @@ import { ModuleLessonsView } from "../components/ModuleLessonsView";
 import { ModulesManagementView } from "../components/ModulesManagementView";
 import { AssignmentsListView } from "../components/AssignmentsListView";
 import { AssignmentDetailView } from "../components/AssignmentDetailView";
+import { ModuleDialog } from "../components/ModuleDialog";
+import { AssignmentDialog } from "../components/AssignmentDialog";
+import { Module, Assignment } from "@/types";
 
 // Custom hook for responsive layout
 function useIsMobile() {
@@ -40,7 +43,7 @@ function useIsMobile() {
 type SidebarView = "root" | "modules" | "assignments";
 
 export function CourseContentPage() {
-  const { courseId } = useParams();
+  const { courseId, assignmentId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { role: userRole } = useAuth();
@@ -49,8 +52,32 @@ export function CourseContentPage() {
 
   const content = courseId ? db.getCourse(courseId) : null;
   
-  const modules = courseId ? db.getModulesByCourse(courseId) : [];
-  const assignments = courseId ? db.getAssignmentsByCourse(courseId) : [];
+  const [modules, setModules] = useState<Module[]>(courseId ? db.getModulesByCourse(courseId) : []);
+  const [assignments, setAssignments] = useState<Assignment[]>(courseId ? db.getAssignmentsByCourse(courseId) : []);
+
+  const [isModuleDialogOpen, setIsModuleDialogOpen] = useState(false);
+  const [editingModule, setEditingModule] = useState<Module | null>(null);
+
+  const [isAssignmentDialogOpen, setIsAssignmentDialogOpen] = useState(false);
+  const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
+
+  // Refresh modules when courseId changes or after edit
+  const refreshModules = () => {
+    if (courseId) {
+      setModules(db.getModulesByCourse(courseId));
+    }
+  };
+
+  const refreshAssignments = () => {
+    if (courseId) {
+      setAssignments(db.getAssignmentsByCourse(courseId));
+    }
+  };
+
+  useEffect(() => {
+    refreshModules();
+    refreshAssignments();
+  }, [courseId]);
 
   // Derive view and selected items from URL
   const view = useMemo<SidebarView>(() => {
@@ -61,7 +88,14 @@ export function CourseContentPage() {
 
   const moduleMatch = location.pathname.match(/\/modules\/([^/]+)/);
   const selectedModuleId = moduleMatch ? moduleMatch[1] : null;
-  const selectedAssignmentId = location.pathname.match(/\/assignments\/([^/]+)/)?.[1] || null;
+  
+  // Step 7: Fix Sidebar Active State / Step 8: Debug Checklist
+  const selectedAssignmentId = assignmentId || null;
+  
+  useEffect(() => {
+    console.log("Current Path:", location.pathname);
+    console.log("AssignmentId from params:", assignmentId);
+  }, [location.pathname, assignmentId]);
 
   // Helper for navigating within course context
   const navigateTo = (path: string) => {
@@ -92,6 +126,26 @@ export function CourseContentPage() {
     navigateTo(`/assignments/${id}`);
   };
 
+  const handleOpenCreateModule = () => {
+    setEditingModule(null);
+    setIsModuleDialogOpen(true);
+  };
+
+  const handleOpenEditModule = (module: Module) => {
+    setEditingModule(module);
+    setIsModuleDialogOpen(true);
+  };
+
+  const handleOpenCreateAssignment = () => {
+    setEditingAssignment(null);
+    setIsAssignmentDialogOpen(true);
+  };
+
+  const handleOpenEditAssignment = (assignment: Assignment) => {
+    setEditingAssignment(assignment);
+    setIsAssignmentDialogOpen(true);
+  };
+
   const handleBackToOverview = () => {
     if (isMobile && (selectedModuleId || selectedAssignmentId)) {
       navigateTo("");
@@ -109,7 +163,7 @@ export function CourseContentPage() {
     return (
       <div className="container-vercel py-12 flex flex-col items-center justify-center text-center">
         <h2 className="text-xl font-bold text-text-primary">Course not found</h2>
-        <Button variant="ghost" className="mt-4" onClick={handleBackToOverview}>
+        <Button variant="outline" size="sm" className="mt-4 border-border-subtle hover:bg-bg-secondary" onClick={handleBackToOverview}>
           <ArrowLeft className="size-4 mr-2" />
           Back to Course Overview
         </Button>
@@ -117,225 +171,262 @@ export function CourseContentPage() {
     );
   }
 
-  // Mobile Lessons View
-  if (isMobile && selectedModuleId && selectedModule) {
-    return (
-      <ModuleLessonsView 
-        module={selectedModule} 
-        lessons={filteredLessons} 
-        isAdmin={isAdmin} 
-      />
-    );
-  }
-
-  if (isMobile) {
-    return (
-      <MobileCourseContentNavigation 
-        content={content} 
-        courseId={courseId || ""}
-        onBack={handleBackToOverview} 
-        isAdmin={isAdmin}
-        view={view}
-        navigateTo={navigateTo}
-        onSelectModule={handleSelectModule}
-        onSelectAssignment={handleSelectAssignment}
-      />
-    );
-  }
-
   return (
-    <div className="flex h-[calc(100vh-56px)] bg-bg-primary overflow-hidden selection:bg-accent-blue/10 font-sans">
-      {/* Sidebar */}
-      <aside className="w-[260px] border-r border-border-subtle bg-bg-primary flex flex-col shrink-0 shadow-border">
-        {/* Sidebar Header: Back Button */}
-        <div className="p-4 border-b border-border-subtle shadow-border flex items-center">
-           <Button 
-            variant="ghost" 
-            size="sm" 
-            className="w-full justify-start text-text-secondary hover:text-text-primary h-8 px-2"
-            onClick={handleBackToOverview}
-          >
-            <ArrowLeft className="size-3.5 mr-2" />
-            <span className="text-xs font-medium">Back to Overview</span>
-          </Button>
-        </div>
+    <div className={`flex ${isMobile ? 'flex-col min-h-screen' : 'h-[calc(100vh-56px)]'} bg-bg-primary overflow-hidden selection:bg-accent-blue/10 font-sans`}>
+      {/* Desktop Sidebar - Hidden on Mobile detail/list views that use full screen */}
+      {!isMobile && (
+        <aside className="w-[260px] border-r border-border-subtle bg-bg-primary flex flex-col shrink-0 shadow-border">
+          {/* Sidebar Header: Back Button */}
+          <div className="p-4 border-b border-border-subtle shadow-border flex items-center">
+             <div 
+              className="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary cursor-pointer transition-colors"
+              onClick={handleBackToOverview}
+            >
+              <ArrowLeft className="size-3.5" />
+              <span className="text-xs font-medium">Back to Overview</span>
+            </div>
+          </div>
 
-        {/* Scrollable Content Container */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-8 custom-scrollbar relative">
-          <AnimatePresence mode="wait" initial={false}>
-            {view === "root" ? (
-              <motion.div
-                key="root"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.15 }}
-                className="space-y-4"
-              >
-                <div className="px-1 py-1">
-                  <h3 className="text-[10px] uppercase font-bold tracking-widest text-text-secondary mb-3">
-                    Course Content
-                  </h3>
-                  <div className="space-y-0.5">
-                    <button 
-                      onClick={() => navigateTo("/modules")}
-                      className="w-full flex items-center justify-between h-9 px-2 rounded-button text-text-secondary hover:bg-bg-secondary hover:text-text-primary transition-all group"
-                    >
-                      <span className="text-xs font-medium">Modules</span>
-                      <ChevronRight className="size-3.5 opacity-40 group-hover:opacity-100 transition-opacity" />
-                    </button>
-                    <button 
-                      onClick={() => navigateTo("/assignments")}
-                      className="w-full flex items-center justify-between h-9 px-2 rounded-button text-text-secondary hover:bg-bg-secondary hover:text-text-primary transition-all group"
-                    >
-                      <span className="text-xs font-medium">Assignments</span>
-                      <ChevronRight className="size-3.5 opacity-40 group-hover:opacity-100 transition-opacity" />
-                    </button>
+          {/* Scrollable Content Container */}
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-8 custom-scrollbar relative">
+            <AnimatePresence mode="wait" initial={false}>
+              {view === "root" ? (
+                <motion.div
+                  key="root"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.15 }}
+                  className="space-y-4"
+                >
+                  <div className="px-1 py-1">
+                    <h3 className="text-[10px] uppercase font-bold tracking-widest text-text-secondary mb-3">
+                      Course Content
+                    </h3>
+                    <div className="space-y-0.5">
+                      <button 
+                        onClick={() => navigateTo("/modules")}
+                        className="w-full flex items-center justify-between h-9 px-2 rounded-button text-text-secondary hover:bg-bg-secondary hover:text-text-primary transition-all group"
+                      >
+                        <span className="text-xs font-medium">Modules</span>
+                        <ChevronRight className="size-3.5 opacity-40 group-hover:opacity-100 transition-opacity" />
+                      </button>
+                      <button 
+                        onClick={() => navigateTo("/assignments")}
+                        className="w-full flex items-center justify-between h-9 px-2 rounded-button text-text-secondary hover:bg-bg-secondary hover:text-text-primary transition-all group"
+                      >
+                        <span className="text-xs font-medium">Assignments</span>
+                        <ChevronRight className="size-3.5 opacity-40 group-hover:opacity-100 transition-opacity" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ) : view === "modules" ? (
-              <motion.div
-                key="modules"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.15 }}
-                className="flex flex-col h-full space-y-4"
-              >
-                <div className="flex items-center gap-2 px-1 mb-1">
-                  <button 
-                    onClick={() => navigateTo("")}
-                    className="size-6 flex items-center justify-center rounded-button hover:bg-bg-secondary text-text-secondary hover:text-text-primary transition-colors"
-                  >
-                    <ArrowLeft className="size-3.5" />
-                  </button>
-                  <span className="text-xs font-bold text-text-primary">Modules</span>
-                </div>
+                </motion.div>
+              ) : view === "modules" ? (
+                <motion.div
+                  key="modules"
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  transition={{ duration: 0.15 }}
+                  className="flex flex-col h-full space-y-4"
+                >
+                  <div className="flex items-center gap-2 px-1 mb-1">
+                    <button 
+                      onClick={() => navigateTo("")}
+                      className="size-6 flex items-center justify-center rounded-button hover:bg-bg-secondary text-text-secondary hover:text-text-primary transition-colors"
+                    >
+                      <ArrowLeft className="size-3.5" />
+                    </button>
+                    <span className="text-xs font-bold text-text-primary">Modules</span>
+                  </div>
 
-                <div className="space-y-0.5">
-                  {modules.map((module) => (
-                    <SidebarItem
-                      key={module.id}
-                      id={module.id}
-                      title={module.title}
-                      isActive={selectedModuleId === module.id}
-                      onClick={() => handleSelectModule(module.id)}
-                      onEdit={() => {}}
-                      onDelete={() => {}}
-                    />
-                  ))}
-                  {modules.length === 0 && (
-                    <div className="py-8 px-4 text-center">
-                      <p className="text-[10px] text-text-secondary font-medium">No modules yet</p>
-                    </div>
+                  <div className="space-y-0.5">
+                    {modules.map((module) => (
+                      <SidebarItem
+                        key={module.id}
+                        id={module.id}
+                        title={module.title}
+                        isActive={selectedModuleId === module.id}
+                        onClick={() => handleSelectModule(module.id)}
+                        onEdit={() => handleOpenEditModule(module)}
+                        onDelete={() => {}}
+                      />
+                    ))}
+                    {modules.length === 0 && (
+                      <div className="py-8 px-4 text-center">
+                        <p className="text-[10px] text-text-secondary font-medium">No modules yet</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {isAdmin && (
+                    <Button 
+                      variant="ghost" 
+                      className="mt-auto w-full justify-start h-9 px-2 text-accent-blue hover:text-accent-blue hover:bg-accent-blue/5"
+                      onClick={handleOpenCreateModule}
+                    >
+                      <Plus className="size-3.5 mr-2" />
+                      <span className="text-xs font-bold">Add Module</span>
+                    </Button>
                   )}
-                </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="assignments"
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  transition={{ duration: 0.15 }}
+                  className="flex flex-col h-full space-y-4"
+                >
+                  <div className="flex items-center gap-2 px-1 mb-1">
+                    <button 
+                      onClick={() => navigateTo("")}
+                      className="size-6 flex items-center justify-center rounded-button hover:bg-bg-secondary text-text-secondary hover:text-text-primary transition-colors"
+                    >
+                      <ArrowLeft className="size-3.5" />
+                    </button>
+                    <span className="text-xs font-bold text-text-primary">Assignments</span>
+                  </div>
 
-                {isAdmin && (
-                  <Button 
-                    variant="ghost" 
-                    className="mt-auto w-full justify-start h-9 px-2 text-accent-blue hover:text-accent-blue hover:bg-accent-blue/5"
-                    onClick={() => {}}
-                  >
-                    <Plus className="size-3.5 mr-2" />
-                    <span className="text-xs font-bold">Add Module</span>
-                  </Button>
-                )}
-              </motion.div>
-            ) : (
-              <motion.div
-                key="assignments"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.15 }}
-                className="flex flex-col h-full space-y-4"
-              >
-                <div className="flex items-center gap-2 px-1 mb-1">
-                  <button 
-                    onClick={() => navigateTo("")}
-                    className="size-6 flex items-center justify-center rounded-button hover:bg-bg-secondary text-text-secondary hover:text-text-primary transition-colors"
-                  >
-                    <ArrowLeft className="size-3.5" />
-                  </button>
-                  <span className="text-xs font-bold text-text-primary">Assignments</span>
-                </div>
+                  <div className="space-y-0.5">
+                    {assignments.map((assignment) => (
+                      <SidebarItem
+                        key={assignment.id}
+                        id={assignment.id}
+                        title={assignment.title}
+                        isActive={selectedAssignmentId === assignment.id}
+                        onClick={() => handleSelectAssignment(assignment.id)}
+                        onEdit={() => handleOpenEditAssignment(assignment)}
+                        onDelete={() => {}}
+                      />
+                    ))}
+                    {assignments.length === 0 && (
+                      <div className="py-8 px-4 text-center">
+                        <p className="text-[10px] text-text-secondary font-medium">No assignments yet</p>
+                      </div>
+                    )}
+                  </div>
 
-                <div className="space-y-0.5">
-                  {assignments.map((assignment) => (
-                    <SidebarItem
-                      key={assignment.id}
-                      id={assignment.id}
-                      title={assignment.title}
-                      isActive={selectedAssignmentId === assignment.id}
-                      onClick={() => handleSelectAssignment(assignment.id)}
-                      onEdit={() => {}}
-                      onDelete={() => {}}
-                    />
-                  ))}
-                  {assignments.length === 0 && (
-                    <div className="py-8 px-4 text-center">
-                      <p className="text-[10px] text-text-secondary font-medium">No assignments yet</p>
-                    </div>
+                  {isAdmin && (
+                    <Button 
+                      variant="ghost" 
+                      className="mt-auto w-full justify-start h-9 px-2 text-accent-blue hover:text-accent-blue hover:bg-accent-blue/5"
+                      onClick={handleOpenCreateAssignment}
+                    >
+                      <Plus className="size-3.5 mr-2" />
+                      <span className="text-xs font-bold">Add Assignment</span>
+                    </Button>
                   )}
-                </div>
-
-                {isAdmin && (
-                  <Button 
-                    variant="ghost" 
-                    className="mt-auto w-full justify-start h-9 px-2 text-accent-blue hover:text-accent-blue hover:bg-accent-blue/5"
-                    onClick={() => {}}
-                  >
-                    <Plus className="size-3.5 mr-2" />
-                    <span className="text-xs font-bold">Add Assignment</span>
-                  </Button>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </aside>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </aside>
+      )}
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col bg-bg-primary relative overflow-hidden">
+      <main className="flex-1 flex flex-col bg-bg-primary relative overflow-y-auto">
         <Routes>
           <Route path="/" element={
-            <motion.div
-              key="placeholder"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center"
-            >
-              <div className="size-16 rounded-3xl bg-bg-secondary flex items-center justify-center text-text-secondary mb-6 shadow-border">
-                <BookOpen className="size-8" />
-              </div>
-              <h3 className="text-xl font-semibold text-text-primary tracking-tight-md">
-                Select a category
-              </h3>
-              <p className="text-sm text-text-secondary max-w-xs mt-2 leading-relaxed">
-                Choose Modules or Assignments from the sidebar to manage your course content.
-              </p>
-            </motion.div>
+            isMobile ? (
+              <MobileCourseContentNavigation 
+                content={content} 
+                courseId={courseId || ""}
+                onBack={handleBackToOverview} 
+                isAdmin={isAdmin}
+                view="root"
+                navigateTo={navigateTo}
+                onSelectModule={handleSelectModule}
+                onSelectAssignment={handleSelectAssignment}
+                handleOpenCreateModule={handleOpenCreateModule}
+                handleOpenEditModule={handleOpenEditModule}
+                handleOpenCreateAssignment={handleOpenCreateAssignment}
+                handleOpenEditAssignment={handleOpenEditAssignment}
+                modules={modules}
+                assignments={assignments}
+              />
+            ) : (
+              <motion.div
+                key="placeholder"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center"
+              >
+                <div className="size-16 rounded-3xl bg-bg-secondary flex items-center justify-center text-text-secondary mb-6 shadow-border">
+                  <BookOpen className="size-8" />
+                </div>
+                <h3 className="text-xl font-semibold text-text-primary tracking-tight-md">
+                  Select a category
+                </h3>
+                <p className="text-sm text-text-secondary max-w-xs mt-2 leading-relaxed">
+                  Choose Modules or Assignments from the sidebar to manage your course content.
+                </p>
+              </motion.div>
+            )
           } />
           <Route path="modules" element={
-            <ModulesManagementView 
-              key="modules-mgmt"
-              courseId={courseId || ""}
-              modules={modules}
-              isAdmin={isAdmin}
-              onSelectModule={handleSelectModule}
-            />
+            isMobile ? (
+              <MobileCourseContentNavigation 
+                content={content} 
+                courseId={courseId || ""}
+                onBack={handleBackToOverview} 
+                isAdmin={isAdmin}
+                view="modules"
+                navigateTo={navigateTo}
+                onSelectModule={handleSelectModule}
+                onSelectAssignment={handleSelectAssignment}
+                handleOpenCreateModule={handleOpenCreateModule}
+                handleOpenEditModule={handleOpenEditModule}
+                handleOpenCreateAssignment={handleOpenCreateAssignment}
+                handleOpenEditAssignment={handleOpenEditAssignment}
+                modules={modules}
+                assignments={assignments}
+              />
+            ) : (
+              <ModulesManagementView 
+                key="modules-mgmt"
+                courseId={courseId || ""}
+                modules={modules}
+                isAdmin={isAdmin}
+                onSelectModule={handleSelectModule}
+                onCreateModule={handleOpenCreateModule}
+                onEditModule={handleOpenEditModule}
+              />
+            )
           } />
           <Route path="modules/:moduleId" element={
             <ModuleLessonsRouteWrapper isAdmin={isAdmin} courseId={courseId || ""} />
           } />
           <Route path="assignments" element={
-             <AssignmentsListView 
-               courseId={courseId || ""}
-               isAdmin={isAdmin}
-             />
+             isMobile ? (
+               <MobileCourseContentNavigation 
+                 content={content} 
+                 courseId={courseId || ""}
+                 onBack={handleBackToOverview} 
+                 isAdmin={isAdmin}
+                 view="assignments"
+                 navigateTo={navigateTo}
+                 onSelectModule={handleSelectModule}
+                 onSelectAssignment={handleSelectAssignment}
+                 handleOpenCreateModule={handleOpenCreateModule}
+                 handleOpenEditModule={handleOpenEditModule}
+                 handleOpenCreateAssignment={handleOpenCreateAssignment}
+                 handleOpenEditAssignment={handleOpenEditAssignment}
+                 modules={modules}
+                 assignments={assignments}
+               />
+             ) : (
+               <AssignmentsListView 
+                 courseId={courseId || ""}
+                 isAdmin={isAdmin}
+                 onSelectAssignment={handleSelectAssignment}
+                 onCreateAssignment={handleOpenCreateAssignment}
+                 onEditAssignment={handleOpenEditAssignment}
+                 assignments={assignments}
+               />
+             )
           } />
           <Route path="assignments/:assignmentId" element={
              <AssignmentDetailView courseId={courseId || ""} />
@@ -343,6 +434,27 @@ export function CourseContentPage() {
           <Route path="*" element={<Navigate to="" replace />} />
         </Routes>
       </main>
+
+      {courseId && (
+        <ModuleDialog 
+          isOpen={isModuleDialogOpen}
+          onClose={() => setIsModuleDialogOpen(false)}
+          courseId={courseId}
+          module={editingModule}
+          onSuccess={refreshModules}
+        />
+      )}
+
+      {courseId && (
+        <AssignmentDialog 
+          isOpen={isAssignmentDialogOpen}
+          onClose={() => setIsAssignmentDialogOpen(false)}
+          courseId={courseId}
+          mode={editingAssignment ? "edit" : "create"}
+          assignment={editingAssignment}
+          onSuccess={refreshAssignments}
+        />
+      )}
     </div>
   );
 }
@@ -355,7 +467,13 @@ function MobileCourseContentNavigation({
   view,
   navigateTo,
   onSelectModule,
-  onSelectAssignment
+  onSelectAssignment,
+  handleOpenCreateModule,
+  handleOpenEditModule,
+  handleOpenCreateAssignment,
+  handleOpenEditAssignment,
+  modules,
+  assignments
 }: { 
   content: any; 
   courseId: string;
@@ -365,6 +483,12 @@ function MobileCourseContentNavigation({
   navigateTo: (path: string) => void;
   onSelectModule: (id: string) => void;
   onSelectAssignment: (id: string) => void;
+  handleOpenCreateModule: () => void;
+  handleOpenEditModule: (module: Module) => void;
+  handleOpenCreateAssignment: () => void;
+  handleOpenEditAssignment: (assignment: Assignment) => void;
+  modules: Module[];
+  assignments: Assignment[];
 }) {
   const navigate = useNavigate();
   const basePath = isAdmin ? `/admin/courses/${courseId}` : `/trainer/courses/${courseId}`;
@@ -373,67 +497,46 @@ function MobileCourseContentNavigation({
     return (
       <ModulesManagementView 
         courseId={courseId}
-        modules={db.getModulesByCourse(courseId)}
+        modules={modules}
         isAdmin={isAdmin}
         onSelectModule={onSelectModule}
         onBack={() => navigateTo("")}
+        onCreateModule={handleOpenCreateModule}
+        onEditModule={handleOpenEditModule}
       />
     );
   }
 
   if (view === "assignments") {
-    const mobileAssignments = db.getAssignmentsByCourse(courseId);
     return (
-      <main className="min-h-screen bg-bg-primary p-4 space-y-6">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="text-text-secondary hover:text-text-primary h-8 px-0"
-          onClick={() => navigateTo("")}
-        >
-          <ArrowLeft className="size-4 mr-2" />
-          Back to Course Content
-        </Button>
-
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold text-text-primary">Assignments</h2>
-          <div className="space-y-3">
-            {mobileAssignments.map((assignment: any) => (
-              <MobileNavCard 
-                key={assignment.id}
-                title={assignment.title}
-                subtitle={`Assignment ${assignment.id}`}
-                icon={<ClipboardList className="size-5" />}
-                onClick={() => onSelectAssignment(assignment.id)}
-              />
-            ))}
-          </div>
-        </div>
-      </main>
+      <AssignmentsListView 
+        courseId={courseId}
+        isAdmin={isAdmin}
+        onSelectAssignment={onSelectAssignment}
+        onCreateAssignment={handleOpenCreateAssignment}
+        onEditAssignment={handleOpenEditAssignment}
+        assignments={assignments}
+        onBack={() => navigateTo("")}
+      />
     );
   }
 
   return (
     <main className="min-h-screen bg-bg-primary p-4 space-y-6">
-      <Button 
-        variant="ghost" 
-        size="sm" 
-        className="text-text-secondary hover:text-text-primary h-8 px-0"
+      <div 
+        className="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary cursor-pointer transition-colors"
         onClick={onBack}
       >
-        <ArrowLeft className="size-4 mr-2" />
-        Back to Overview
-      </Button>
+        <ArrowLeft className="size-4" />
+        <span className="font-medium">Back to Overview</span>
+      </div>
 
-      <section className="bg-bg-primary p-4 rounded-card shadow-border space-y-2">
-        <div className="text-[10px] font-bold text-text-secondary tracking-widest uppercase">
-          {courseId}
-        </div>
+      <section className="px-4 pt-2 pb-1 space-y-1">
         <h1 className="text-xl font-bold text-text-primary tracking-tight leading-tight">
           {content.title}
         </h1>
         <div className="text-sm text-text-secondary">
-          Trainer: <span className="font-medium text-text-primary">{content.trainerName}</span>
+          <span className="font-medium text-text-primary">{content.trainerName}</span>
         </div>
       </section>
 

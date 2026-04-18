@@ -1,4 +1,4 @@
-import { Course, Module, Lesson, Assignment } from "./types";
+import { Course, Module, Lesson, LessonMimeType, Assignment, Submission, SubmissionStatus } from "./types";
 
 export const DB = {
   courses: [
@@ -156,7 +156,489 @@ Upload your 'tests' folder and a screenshot of your code coverage report.
     { id: "A-8", course_id: "C-1", title: "API Documentation", instructions: "# OpenAPI/Swagger\n\nCustomize your documentation with descriptive tags and summaries.", dueDate: "2026-05-10T10:00:00Z", maxScore: 5, numberOfAttempts: 1, attachment: null },
     { id: "A-9", course_id: "C-1", title: "Rate Limiting", instructions: "# Deny Service\n\nProtect your API from abuse by implementing rate limiting.", dueDate: "2026-05-12T10:00:00Z", maxScore: 5, numberOfAttempts: 1, attachment: null },
     { id: "A-10", course_id: "C-1", title: "Final Project", instructions: "# Build Full Stack App\n\nCombine everything you learned into a complete production project.", dueDate: "2026-05-20T10:00:00Z", maxScore: 50, numberOfAttempts: 1, attachment: null }
-  ] as Assignment[]
+  ] as Assignment[],
+  submissions: [
+    {
+      "id": "S-100",
+      "assignment_id": "A-1",
+      "username": "John Doe",
+      "email": "john@example.com",
+      "attempt": 2,
+      "maxAttempt": 3,
+      "status": "submitted",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-09T08:46:59.636Z"
+    },
+    {
+      "id": "S-101",
+      "assignment_id": "A-1",
+      "username": "Jane Smith",
+      "email": "jane@example.com",
+      "attempt": 3,
+      "maxAttempt": 3,
+      "status": "done-late",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-18T08:46:59.636Z"
+    },
+    {
+      "id": "S-102",
+      "assignment_id": "A-1",
+      "username": "Alice Johnson",
+      "email": "alice@example.com",
+      "attempt": 2,
+      "maxAttempt": 3,
+      "status": "graded",
+      "score": 4,
+      "maxScore": 10,
+      "submittedAt": "2026-04-09T08:46:59.636Z"
+    },
+    {
+      "id": "S-103",
+      "assignment_id": "A-1",
+      "username": "Bob Brown",
+      "email": "bob@example.com",
+      "attempt": 2,
+      "maxAttempt": 3,
+      "status": "graded",
+      "score": 0,
+      "maxScore": 10,
+      "submittedAt": "2026-04-16T08:46:59.636Z"
+    },
+    {
+      "id": "S-104",
+      "assignment_id": "A-1",
+      "username": "Charlie Davis",
+      "email": "charlie@example.com",
+      "attempt": 1,
+      "maxAttempt": 3,
+      "status": "submitted",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-11T08:46:59.636Z"
+    },
+    {
+      "id": "S-105",
+      "assignment_id": "A-1",
+      "username": "Eve White",
+      "email": "eve@example.com",
+      "attempt": 1,
+      "maxAttempt": 3,
+      "status": "done-late",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-17T08:46:59.636Z"
+    },
+    {
+      "id": "S-106",
+      "assignment_id": "A-1",
+      "username": "Frank Miller",
+      "email": "frank@example.com",
+      "attempt": 1,
+      "maxAttempt": 3,
+      "status": "done-late",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-10T08:46:59.636Z"
+    },
+    {
+      "id": "S-107",
+      "assignment_id": "A-1",
+      "username": "Grace Hopper",
+      "email": "grace@example.com",
+      "attempt": 2,
+      "maxAttempt": 3,
+      "status": "graded",
+      "score": 1,
+      "maxScore": 10,
+      "submittedAt": "2026-04-17T08:46:59.636Z"
+    },
+    {
+      "id": "S-108",
+      "assignment_id": "A-1",
+      "username": "Heidi Klum",
+      "email": "heidi@example.com",
+      "attempt": 1,
+      "maxAttempt": 3,
+      "status": "done-late",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-11T08:46:59.636Z"
+    },
+    {
+      "id": "S-109",
+      "assignment_id": "A-1",
+      "username": "Ivan Drago",
+      "email": "ivan@example.com",
+      "attempt": 2,
+      "maxAttempt": 3,
+      "status": "graded",
+      "score": 3,
+      "maxScore": 10,
+      "submittedAt": "2026-04-14T08:46:59.636Z"
+    },
+    {
+      "id": "S-110",
+      "assignment_id": "A-1",
+      "username": "John Doe",
+      "email": "john@example.com",
+      "attempt": 2,
+      "maxAttempt": 3,
+      "status": "done-late",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-10T08:46:59.636Z"
+    },
+    {
+      "id": "S-111",
+      "assignment_id": "A-1",
+      "username": "Jane Smith",
+      "email": "jane@example.com",
+      "attempt": 1,
+      "maxAttempt": 3,
+      "status": "graded",
+      "score": 1,
+      "maxScore": 10,
+      "submittedAt": "2026-04-12T08:46:59.636Z"
+    },
+    {
+      "id": "S-112",
+      "assignment_id": "A-1",
+      "username": "Alice Johnson",
+      "email": "alice@example.com",
+      "attempt": 2,
+      "maxAttempt": 3,
+      "status": "submitted",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-11T08:46:59.636Z"
+    },
+    {
+      "id": "S-113",
+      "assignment_id": "A-1",
+      "username": "Bob Brown",
+      "email": "bob@example.com",
+      "attempt": 1,
+      "maxAttempt": 3,
+      "status": "done-late",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-17T08:46:59.636Z"
+    },
+    {
+      "id": "S-114",
+      "assignment_id": "A-1",
+      "username": "Charlie Davis",
+      "email": "charlie@example.com",
+      "attempt": 2,
+      "maxAttempt": 3,
+      "status": "submitted",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-09T08:46:59.636Z"
+    },
+    {
+      "id": "S-115",
+      "assignment_id": "A-1",
+      "username": "Eve White",
+      "email": "eve@example.com",
+      "attempt": 3,
+      "maxAttempt": 3,
+      "status": "submitted",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-16T08:46:59.636Z"
+    },
+    {
+      "id": "S-116",
+      "assignment_id": "A-1",
+      "username": "Frank Miller",
+      "email": "frank@example.com",
+      "attempt": 3,
+      "maxAttempt": 3,
+      "status": "graded",
+      "score": 0,
+      "maxScore": 10,
+      "submittedAt": "2026-04-09T08:46:59.636Z"
+    },
+    {
+      "id": "S-117",
+      "assignment_id": "A-1",
+      "username": "Grace Hopper",
+      "email": "grace@example.com",
+      "attempt": 3,
+      "maxAttempt": 3,
+      "status": "graded",
+      "score": 4,
+      "maxScore": 10,
+      "submittedAt": "2026-04-18T08:46:59.636Z"
+    },
+    {
+      "id": "S-118",
+      "assignment_id": "A-1",
+      "username": "Heidi Klum",
+      "email": "heidi@example.com",
+      "attempt": 2,
+      "maxAttempt": 3,
+      "status": "done-late",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-09T08:46:59.636Z"
+    },
+    {
+      "id": "S-119",
+      "assignment_id": "A-1",
+      "username": "Ivan Drago",
+      "email": "ivan@example.com",
+      "attempt": 2,
+      "maxAttempt": 3,
+      "status": "submitted",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-09T08:46:59.636Z"
+    },
+    {
+      "id": "S-120",
+      "assignment_id": "A-1",
+      "username": "John Doe",
+      "email": "john@example.com",
+      "attempt": 2,
+      "maxAttempt": 3,
+      "status": "submitted",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-10T08:46:59.637Z"
+    },
+    {
+      "id": "S-121",
+      "assignment_id": "A-1",
+      "username": "Jane Smith",
+      "email": "jane@example.com",
+      "attempt": 2,
+      "maxAttempt": 3,
+      "status": "done-late",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-16T08:46:59.637Z"
+    },
+    {
+      "id": "S-122",
+      "assignment_id": "A-1",
+      "username": "Alice Johnson",
+      "email": "alice@example.com",
+      "attempt": 3,
+      "maxAttempt": 3,
+      "status": "done-late",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-12T08:46:59.637Z"
+    },
+    {
+      "id": "S-123",
+      "assignment_id": "A-1",
+      "username": "Bob Brown",
+      "email": "bob@example.com",
+      "attempt": 3,
+      "maxAttempt": 3,
+      "status": "submitted",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-13T08:46:59.637Z"
+    },
+    {
+      "id": "S-124",
+      "assignment_id": "A-1",
+      "username": "Charlie Davis",
+      "email": "charlie@example.com",
+      "attempt": 3,
+      "maxAttempt": 3,
+      "status": "graded",
+      "score": 10,
+      "maxScore": 10,
+      "submittedAt": "2026-04-16T08:46:59.637Z"
+    },
+    {
+      "id": "S-125",
+      "assignment_id": "A-1",
+      "username": "Eve White",
+      "email": "eve@example.com",
+      "attempt": 2,
+      "maxAttempt": 3,
+      "status": "done-late",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-14T08:46:59.637Z"
+    },
+    {
+      "id": "S-126",
+      "assignment_id": "A-1",
+      "username": "Frank Miller",
+      "email": "frank@example.com",
+      "attempt": 2,
+      "maxAttempt": 3,
+      "status": "graded",
+      "score": 10,
+      "maxScore": 10,
+      "submittedAt": "2026-04-12T08:46:59.637Z"
+    },
+    {
+      "id": "S-127",
+      "assignment_id": "A-1",
+      "username": "Grace Hopper",
+      "email": "grace@example.com",
+      "attempt": 3,
+      "maxAttempt": 3,
+      "status": "graded",
+      "score": 8,
+      "maxScore": 10,
+      "submittedAt": "2026-04-18T08:46:59.637Z"
+    },
+    {
+      "id": "S-128",
+      "assignment_id": "A-1",
+      "username": "Heidi Klum",
+      "email": "heidi@example.com",
+      "attempt": 3,
+      "maxAttempt": 3,
+      "status": "graded",
+      "score": 2,
+      "maxScore": 10,
+      "submittedAt": "2026-04-13T08:46:59.637Z"
+    },
+    {
+      "id": "S-129",
+      "assignment_id": "A-1",
+      "username": "Ivan Drago",
+      "email": "ivan@example.com",
+      "attempt": 3,
+      "maxAttempt": 3,
+      "status": "done-late",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-09T08:46:59.637Z"
+    },
+    {
+      "id": "S-200",
+      "assignment_id": "A-2",
+      "username": "John Doe",
+      "email": "john@example.com",
+      "attempt": 3,
+      "maxAttempt": 3,
+      "status": "graded",
+      "score": 10,
+      "maxScore": 10,
+      "submittedAt": "2026-04-10T08:46:59.637Z"
+    },
+    {
+      "id": "S-201",
+      "assignment_id": "A-2",
+      "username": "Jane Smith",
+      "email": "jane@example.com",
+      "attempt": 3,
+      "maxAttempt": 3,
+      "status": "done-late",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-18T08:46:59.637Z"
+    },
+    {
+      "id": "S-202",
+      "assignment_id": "A-2",
+      "username": "Alice Johnson",
+      "email": "alice@example.com",
+      "attempt": 3,
+      "maxAttempt": 3,
+      "status": "graded",
+      "score": 8,
+      "maxScore": 10,
+      "submittedAt": "2026-04-10T08:46:59.637Z"
+    },
+    {
+      "id": "S-203",
+      "assignment_id": "A-2",
+      "username": "Bob Brown",
+      "email": "bob@example.com",
+      "attempt": 1,
+      "maxAttempt": 3,
+      "status": "done-late",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-15T08:46:59.637Z"
+    },
+    {
+      "id": "S-204",
+      "assignment_id": "A-2",
+      "username": "Charlie Davis",
+      "email": "charlie@example.com",
+      "attempt": 2,
+      "maxAttempt": 3,
+      "status": "graded",
+      "score": 4,
+      "maxScore": 10,
+      "submittedAt": "2026-04-13T08:46:59.637Z"
+    },
+    {
+      "id": "S-205",
+      "assignment_id": "A-2",
+      "username": "Eve White",
+      "email": "eve@example.com",
+      "attempt": 3,
+      "maxAttempt": 3,
+      "status": "done-late",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-10T08:46:59.637Z"
+    },
+    {
+      "id": "S-206",
+      "assignment_id": "A-2",
+      "username": "Frank Miller",
+      "email": "frank@example.com",
+      "attempt": 2,
+      "maxAttempt": 3,
+      "status": "done-late",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-14T08:46:59.637Z"
+    },
+    {
+      "id": "S-207",
+      "assignment_id": "A-2",
+      "username": "Grace Hopper",
+      "email": "grace@example.com",
+      "attempt": 3,
+      "maxAttempt": 3,
+      "status": "done-late",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-12T08:46:59.637Z"
+    },
+    {
+      "id": "S-208",
+      "assignment_id": "A-2",
+      "username": "Heidi Klum",
+      "email": "heidi@example.com",
+      "attempt": 3,
+      "maxAttempt": 3,
+      "status": "done-late",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-17T08:46:59.637Z"
+    },
+    {
+      "id": "S-209",
+      "assignment_id": "A-2",
+      "username": "Ivan Drago",
+      "email": "ivan@example.com",
+      "attempt": 2,
+      "maxAttempt": 3,
+      "status": "done-late",
+      "score": null,
+      "maxScore": 10,
+      "submittedAt": "2026-04-12T08:46:59.637Z"
+    }
+  ] as Submission[]
 };
 
 export const db = {
@@ -184,9 +666,190 @@ export const db = {
     console.log("db.getAssignment", { courseId, assignmentId });
     return DB.assignments.find(a => a.id === assignmentId && a.course_id === courseId) || null;
   },
+
+  createAssignment(courseId: string, data: { 
+    title: string; 
+    instructions: string | null; 
+    dueDate: string | null; 
+    maxScore: number; 
+    numberOfAttempts: number;
+    attachment?: { mediaId: string; mimeType: LessonMimeType; filename: string; } | null;
+  }): Assignment {
+    console.log("db.createAssignment", { courseId, data });
+    const newAssignment: Assignment = {
+      id: `A-${DB.assignments.length + 1}`,
+      course_id: courseId,
+      title: data.title,
+      instructions: data.instructions || "",
+      dueDate: data.dueDate || "",
+      maxScore: data.maxScore,
+      numberOfAttempts: data.numberOfAttempts,
+      attachment: data.attachment || null
+    };
+    DB.assignments.push(newAssignment);
+    return newAssignment;
+  },
+
+  updateAssignment(assignmentId: string, data: { 
+    title: string; 
+    instructions: string | null; 
+    dueDate: string | null; 
+  }): Assignment {
+    console.log("db.updateAssignment", { assignmentId, data });
+    const index = DB.assignments.findIndex(a => a.id === assignmentId);
+    if (index === -1) throw new Error("Assignment not found");
+    
+    DB.assignments[index] = {
+      ...DB.assignments[index],
+      title: data.title,
+      instructions: data.instructions || "",
+      dueDate: data.dueDate || ""
+    };
+    return DB.assignments[index];
+  },
+
+  getSubmissionsByAssignment(assignmentId: string): Submission[] {
+    console.log("db.getSubmissionsByAssignment", { assignmentId });
+    return DB.submissions.filter(s => s.assignment_id === assignmentId);
+  },
   
   getModule(courseId: string, moduleId: string): Module | null {
     console.log("db.getModule", { courseId, moduleId });
     return DB.modules.find(m => m.id === moduleId && m.course_id === courseId) || null;
+  },
+
+  createModule(courseId: string, data: { title: string; description: string }): Module {
+    console.log("db.createModule", { courseId, data });
+    const newModule: Module = {
+      id: `M-${DB.modules.length + 1}`,
+      course_id: courseId,
+      title: data.title,
+      description: data.description
+    };
+    DB.modules.push(newModule);
+    return newModule;
+  },
+
+  updateModule(moduleId: string, data: { title: string; description: string }): Module {
+    console.log("db.updateModule", { moduleId, data });
+    const index = DB.modules.findIndex(m => m.id === moduleId);
+    if (index === -1) throw new Error("Module not found");
+    
+    DB.modules[index] = {
+      ...DB.modules[index],
+      title: data.title,
+      description: data.description
+    };
+    return DB.modules[index];
+  },
+
+  getLesson(moduleId: string, lessonId: string): Lesson | null {
+    console.log("db.getLesson", { moduleId, lessonId });
+    return DB.lessons.find(l => l.id === lessonId && l.module_id === moduleId) || null;
+  },
+
+  createLesson(moduleId: string, data: { 
+    title: string; 
+    description: string; 
+    media_id: string; 
+    mime_type: LessonMimeType 
+  }): Lesson {
+    console.log("db.createLesson", { moduleId, data });
+    const newLesson: Lesson = {
+      id: `L-${DB.lessons.length + 1}`,
+      module_id: moduleId,
+      title: data.title,
+      description: data.description,
+      media_id: data.media_id,
+      mime_type: data.mime_type
+    };
+    DB.lessons.push(newLesson);
+    return newLesson;
+  },
+
+  updateLesson(lessonId: string, data: { title: string; description: string }): Lesson {
+    console.log("db.updateLesson", { lessonId, data });
+    const index = DB.lessons.findIndex(l => l.id === lessonId);
+    if (index === -1) throw new Error("Lesson not found");
+    
+    DB.lessons[index] = {
+      ...DB.lessons[index],
+      title: data.title,
+      description: data.description
+    };
+    return DB.lessons[index];
+  },
+
+  getSubmissions({
+    assignmentId,
+    page,
+    limit,
+    fromDate,
+    toDate,
+    status,
+    sortBy
+  }: {
+    assignmentId: string;
+    page: number;
+    limit: number;
+    fromDate?: string | null;
+    toDate?: string | null;
+    status?: SubmissionStatus | null;
+    sortBy?: "submitted_at_asc" | "submitted_at_desc" | "grade_asc" | "grade_desc";
+  }) {
+    console.log("db.getSubmissions", { assignmentId, page, limit, fromDate, toDate, status, sortBy });
+    
+    let filtered = DB.submissions.filter(s => s.assignment_id === assignmentId);
+
+    if (status) {
+      filtered = filtered.filter(s => s.status === status);
+    }
+
+    if (fromDate) {
+      const start = new Date(fromDate);
+      filtered = filtered.filter(s => new Date(s.submittedAt) >= start);
+    }
+
+    if (toDate) {
+      const end = new Date(toDate);
+      end.setHours(23, 59, 59, 999);
+      filtered = filtered.filter(s => new Date(s.submittedAt) <= end);
+    }
+
+    if (sortBy) {
+      filtered.sort((a, b) => {
+        switch (sortBy) {
+          case "submitted_at_asc":
+            return new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime();
+          case "submitted_at_desc":
+            return new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime();
+          case "grade_asc":
+            if (a.score === null && b.score === null) return 0;
+            if (a.score === null) return 1;
+            if (b.score === null) return -1;
+            return a.score - b.score;
+          case "grade_desc":
+            if (a.score === null && b.score === null) return 0;
+            if (a.score === null) return 1;
+            if (b.score === null) return -1;
+            return b.score - a.score;
+          default:
+            return 0;
+        }
+      });
+    }
+
+    const totalItems = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / limit));
+    const offset = (page - 1) * limit;
+    const data = filtered.slice(offset, offset + limit);
+
+    return {
+      data,
+      page,
+      limit,
+      totalItems,
+      totalPages
+    };
   }
 };
