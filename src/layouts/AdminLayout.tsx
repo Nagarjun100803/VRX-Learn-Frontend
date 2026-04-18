@@ -40,10 +40,7 @@ export function AdminLayout() {
         <Route path="courses" element={<CoursesPage />} />
         <Route path="courses/:courseId" element={<CourseOverviewPage />} />
         <Route path="courses/:courseId/trainees" element={<TraineeRosterPage />} />
-        <Route path="courses/:courseId/content" element={<CourseContentPage />} />
-        <Route path="courses/:courseId/modules" element={<CourseContentPage />} />
-        <Route path="courses/:courseId/modules/:moduleId" element={<CourseContentPage />} />
-        <Route path="courses/:courseId/assignments" element={<CourseContentPage />} />
+        <Route path="courses/:courseId/content/*" element={<CourseContentPage />} />
         <Route path="enrollments" element={<EnrollmentsPage />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>

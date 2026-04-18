@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate, useLocation, Routes, Route, Navigate } from "react-router-dom";
 import { 
   ArrowLeft, 
   Plus, 
@@ -16,10 +16,11 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
-import { MOCK_COURSE_CONTENT } from "../content-types";
-import { MOCK_MODULES, MOCK_LESSONS } from "@/mocks/course-content";
+import { db } from "@/db";
 import { ModuleLessonsView } from "../components/ModuleLessonsView";
 import { ModulesManagementView } from "../components/ModulesManagementView";
+import { AssignmentsListView } from "../components/AssignmentsListView";
+import { AssignmentDetailView } from "../components/AssignmentDetailView";
 
 // Custom hook for responsive layout
 function useIsMobile() {
@@ -41,11 +42,15 @@ type SidebarView = "root" | "modules" | "assignments";
 export function CourseContentPage() {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { role: userRole } = useAuth();
   const isAdmin = userRole === "admin";
   const isMobile = useIsMobile();
 
-  const content = MOCK_COURSE_CONTENT[courseId || ""] || null;
+  const content = courseId ? db.getCourse(courseId) : null;
+  
+  const modules = courseId ? db.getModulesByCourse(courseId) : [];
+  const assignments = courseId ? db.getAssignmentsByCourse(courseId) : [];
 
   // Derive view and selected items from URL
   const view = useMemo<SidebarView>(() => {
@@ -54,39 +59,42 @@ export function CourseContentPage() {
     return "root";
   }, [location.pathname]);
 
-  const { moduleId } = useParams();
-  const selectedModuleId = moduleId || null;
-  const selectedAssignmentId = null; // Can be enhanced if assignment sub-routes are added
+  const moduleMatch = location.pathname.match(/\/modules\/([^/]+)/);
+  const selectedModuleId = moduleMatch ? moduleMatch[1] : null;
+  const selectedAssignmentId = location.pathname.match(/\/assignments\/([^/]+)/)?.[1] || null;
 
   // Helper for navigating within course context
   const navigateTo = (path: string) => {
     const root = isAdmin ? "/admin" : "/trainer";
-    navigate(`${root}/courses/${courseId}${path}`);
+    navigate(`${root}/courses/${courseId}/content${path}`);
   };
 
-  // Filter lessons for the selected module
-  const filteredLessons = useMemo(() => {
-    if (!selectedModuleId) return [];
-    return MOCK_LESSONS.filter(l => l.module_id === selectedModuleId);
-  }, [selectedModuleId]);
+  // Safe data fetching based on derived IDs
+  const filteredLessons = selectedModuleId ? db.getLessonsByModule(selectedModuleId) : [];
+  const selectedModule = (selectedModuleId && courseId) ? db.getModule(courseId, selectedModuleId) : null;
 
-  const selectedModule = useMemo(() => {
-    if (!selectedModuleId) return null;
-    return MOCK_MODULES.find(m => m.id === selectedModuleId) || null;
-  }, [selectedModuleId]);
+  // Debug Safety
+  useEffect(() => {
+    if (selectedModuleId) {
+       console.log("ModuleLessonsView Context:", {
+         moduleId: selectedModuleId,
+         module: selectedModule,
+         lessons: filteredLessons
+       });
+    }
+  }, [selectedModuleId, selectedModule, filteredLessons]);
 
   const handleSelectModule = (id: string) => {
     navigateTo(`/modules/${id}`);
   };
 
   const handleSelectAssignment = (id: string) => {
-    // Currently no sub-routes for assignments, but we keep the logic structure
-    navigateTo(`/assignments`);
+    navigateTo(`/assignments/${id}`);
   };
 
   const handleBackToOverview = () => {
     if (isMobile && (selectedModuleId || selectedAssignmentId)) {
-      navigateTo("/content");
+      navigateTo("");
       return;
     }
     const basePath = isAdmin ? "/admin" : "/trainer";
@@ -124,6 +132,7 @@ export function CourseContentPage() {
     return (
       <MobileCourseContentNavigation 
         content={content} 
+        courseId={courseId || ""}
         onBack={handleBackToOverview} 
         isAdmin={isAdmin}
         view={view}
@@ -196,7 +205,7 @@ export function CourseContentPage() {
               >
                 <div className="flex items-center gap-2 px-1 mb-1">
                   <button 
-                    onClick={() => navigateTo("/content")}
+                    onClick={() => navigateTo("")}
                     className="size-6 flex items-center justify-center rounded-button hover:bg-bg-secondary text-text-secondary hover:text-text-primary transition-colors"
                   >
                     <ArrowLeft className="size-3.5" />
@@ -205,7 +214,7 @@ export function CourseContentPage() {
                 </div>
 
                 <div className="space-y-0.5">
-                  {content.modules.map((module) => (
+                  {modules.map((module) => (
                     <SidebarItem
                       key={module.id}
                       id={module.id}
@@ -216,7 +225,7 @@ export function CourseContentPage() {
                       onDelete={() => {}}
                     />
                   ))}
-                  {content.modules.length === 0 && (
+                  {modules.length === 0 && (
                     <div className="py-8 px-4 text-center">
                       <p className="text-[10px] text-text-secondary font-medium">No modules yet</p>
                     </div>
@@ -245,7 +254,7 @@ export function CourseContentPage() {
               >
                 <div className="flex items-center gap-2 px-1 mb-1">
                   <button 
-                    onClick={() => navigateTo("/content")}
+                    onClick={() => navigateTo("")}
                     className="size-6 flex items-center justify-center rounded-button hover:bg-bg-secondary text-text-secondary hover:text-text-primary transition-colors"
                   >
                     <ArrowLeft className="size-3.5" />
@@ -254,7 +263,7 @@ export function CourseContentPage() {
                 </div>
 
                 <div className="space-y-0.5">
-                  {content.assignments.map((assignment) => (
+                  {assignments.map((assignment) => (
                     <SidebarItem
                       key={assignment.id}
                       id={assignment.id}
@@ -265,7 +274,7 @@ export function CourseContentPage() {
                       onDelete={() => {}}
                     />
                   ))}
-                  {content.assignments.length === 0 && (
+                  {assignments.length === 0 && (
                     <div className="py-8 px-4 text-center">
                       <p className="text-[10px] text-text-secondary font-medium">No assignments yet</p>
                     </div>
@@ -290,97 +299,49 @@ export function CourseContentPage() {
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col bg-bg-primary relative overflow-hidden">
-        <AnimatePresence mode="wait">
-          {!selectedModuleId && !selectedAssignmentId ? (
-            view === "modules" ? (
-              <ModulesManagementView 
-                key="modules-mgmt"
-                courseId={content.course.id}
-                modules={content.modules}
-                isAdmin={isAdmin}
-                onSelectModule={handleSelectModule}
-              />
-            ) : view === "assignments" ? (
-              <motion.div
-                key="assignments-mgmt"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex-1 flex flex-col p-8"
-              >
-                <div className="flex items-center justify-between mb-8 pb-8 border-b border-border-subtle shadow-border">
-                  <div className="space-y-1">
-                    <h1 className="text-2xl font-bold text-text-primary tracking-tight">Assignments</h1>
-                    <p className="text-sm text-text-secondary">Manage course assignments</p>
-                  </div>
-                  <Button className="h-9 px-4 bg-text-primary text-bg-primary hover:bg-text-primary/90 font-bold text-xs rounded-button">
-                    <Plus className="size-4 mr-2" />
-                    New Assignment
-                  </Button>
-                </div>
-                <div className="flex-1 rounded-card border-2 border-dashed border-border-subtle flex flex-col items-center justify-center opacity-40">
-                  <ClipboardList className="size-10 mb-4" />
-                  <p className="text-sm font-medium">Assignments Management (Coming Soon)</p>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="placeholder"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center"
-              >
-                <div className="size-16 rounded-3xl bg-bg-secondary flex items-center justify-center text-text-secondary mb-6 shadow-border">
-                  <BookOpen className="size-8" />
-                </div>
-                <h3 className="text-xl font-semibold text-text-primary tracking-tight-md">
-                  Select a category
-                </h3>
-                <p className="text-sm text-text-secondary max-w-xs mt-2 leading-relaxed">
-                  Choose Modules or Assignments from the sidebar to manage your course content.
-                </p>
-              </motion.div>
-            )
-          ) : selectedModuleId && selectedModule ? (
-              <ModuleLessonsView 
-                key={selectedModuleId}
-                module={selectedModule}
-                lessons={filteredLessons}
-                isAdmin={isAdmin}
-              />
-          ) : (
+        <Routes>
+          <Route path="/" element={
             <motion.div
-              key={selectedAssignmentId}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex-1 flex flex-col p-8"
+              key="placeholder"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center"
             >
-              <div className="flex items-center justify-between mb-8 pb-8 border-b border-border-subtle shadow-border">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-text-secondary">
-                    Assignment
-                    <span className="text-border-subtle">•</span>
-                    {selectedAssignmentId}
-                  </div>
-                  <h1 className="text-2xl font-bold text-text-primary tracking-tight">
-                    {content.assignments.find(a => a.id === selectedAssignmentId)?.title}
-                  </h1>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" className="size-9 shadow-border text-text-secondary">
-                    <MoreVertical className="size-4" />
-                  </Button>
-                </div>
+              <div className="size-16 rounded-3xl bg-bg-secondary flex items-center justify-center text-text-secondary mb-6 shadow-border">
+                <BookOpen className="size-8" />
               </div>
-
-              {/* Detail Placeholder for Assignments */}
-              <div className="flex-1 rounded-card border-2 border-dashed border-border-subtle flex flex-col items-center justify-center opacity-40">
-                <ClipboardList className="size-10 mb-4" />
-                <p className="text-sm font-medium">Assignment Editor (Coming Soon)</p>
-              </div>
+              <h3 className="text-xl font-semibold text-text-primary tracking-tight-md">
+                Select a category
+              </h3>
+              <p className="text-sm text-text-secondary max-w-xs mt-2 leading-relaxed">
+                Choose Modules or Assignments from the sidebar to manage your course content.
+              </p>
             </motion.div>
-          )}
-        </AnimatePresence>
+          } />
+          <Route path="modules" element={
+            <ModulesManagementView 
+              key="modules-mgmt"
+              courseId={courseId || ""}
+              modules={modules}
+              isAdmin={isAdmin}
+              onSelectModule={handleSelectModule}
+            />
+          } />
+          <Route path="modules/:moduleId" element={
+            <ModuleLessonsRouteWrapper isAdmin={isAdmin} courseId={courseId || ""} />
+          } />
+          <Route path="assignments" element={
+             <AssignmentsListView 
+               courseId={courseId || ""}
+               isAdmin={isAdmin}
+             />
+          } />
+          <Route path="assignments/:assignmentId" element={
+             <AssignmentDetailView courseId={courseId || ""} />
+          } />
+          <Route path="*" element={<Navigate to="" replace />} />
+        </Routes>
       </main>
     </div>
   );
@@ -388,6 +349,7 @@ export function CourseContentPage() {
 
 function MobileCourseContentNavigation({ 
   content, 
+  courseId,
   onBack, 
   isAdmin,
   view,
@@ -396,6 +358,7 @@ function MobileCourseContentNavigation({
   onSelectAssignment
 }: { 
   content: any; 
+  courseId: string;
   onBack: () => void;
   isAdmin: boolean;
   view: SidebarView;
@@ -404,28 +367,29 @@ function MobileCourseContentNavigation({
   onSelectAssignment: (id: string) => void;
 }) {
   const navigate = useNavigate();
-  const basePath = isAdmin ? `/admin/courses/${content.course.id}` : `/trainer/courses/${content.course.id}`;
+  const basePath = isAdmin ? `/admin/courses/${courseId}` : `/trainer/courses/${courseId}`;
 
   if (view === "modules") {
     return (
       <ModulesManagementView 
-        courseId={content.course.id}
-        modules={content.modules}
+        courseId={courseId}
+        modules={db.getModulesByCourse(courseId)}
         isAdmin={isAdmin}
         onSelectModule={onSelectModule}
-        onBack={() => navigateTo("/content")}
+        onBack={() => navigateTo("")}
       />
     );
   }
 
   if (view === "assignments") {
+    const mobileAssignments = db.getAssignmentsByCourse(courseId);
     return (
       <main className="min-h-screen bg-bg-primary p-4 space-y-6">
         <Button 
           variant="ghost" 
           size="sm" 
           className="text-text-secondary hover:text-text-primary h-8 px-0"
-          onClick={() => navigateTo("/content")}
+          onClick={() => navigateTo("")}
         >
           <ArrowLeft className="size-4 mr-2" />
           Back to Course Content
@@ -434,7 +398,7 @@ function MobileCourseContentNavigation({
         <div className="space-y-4">
           <h2 className="text-xl font-bold text-text-primary">Assignments</h2>
           <div className="space-y-3">
-            {content.assignments.map((assignment: any) => (
+            {mobileAssignments.map((assignment: any) => (
               <MobileNavCard 
                 key={assignment.id}
                 title={assignment.title}
@@ -463,13 +427,13 @@ function MobileCourseContentNavigation({
 
       <section className="bg-bg-primary p-4 rounded-card shadow-border space-y-2">
         <div className="text-[10px] font-bold text-text-secondary tracking-widest uppercase">
-          {content.course.id}
+          {courseId}
         </div>
         <h1 className="text-xl font-bold text-text-primary tracking-tight leading-tight">
-          {content.course.title}
+          {content.title}
         </h1>
         <div className="text-sm text-text-secondary">
-          Trainer: <span className="font-medium text-text-primary">{content.course.trainerName}</span>
+          Trainer: <span className="font-medium text-text-primary">{content.trainerName}</span>
         </div>
       </section>
 
@@ -531,6 +495,34 @@ interface SidebarItemProps {
   onClick: () => void;
   onEdit: () => void;
   onDelete: () => void;
+}
+
+/**
+ * Wrapper for ModuleLessonsView to capture nested moduleId param and fetch data
+ */
+function ModuleLessonsRouteWrapper({ isAdmin, courseId }: { isAdmin: boolean, courseId: string }) {
+  const { moduleId } = useParams();
+  const selectedModule = moduleId ? db.getModule(courseId, moduleId || "") : null;
+  const lessons = moduleId ? db.getLessonsByModule(moduleId) : [];
+
+  console.log("ModuleLessonsRouteWrapper:", { moduleId, selectedModule, lessonsCount: lessons.length });
+
+  if (!selectedModule) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full w-full text-sm text-text-secondary bg-bg-primary">
+        Module not found
+      </div>
+    );
+  }
+
+  return (
+    <ModuleLessonsView 
+      key={selectedModule.id}
+      module={selectedModule}
+      lessons={lessons}
+      isAdmin={isAdmin}
+    />
+  );
 }
 
 function SidebarItem({ id, title, isActive, onClick, onEdit, onDelete }: SidebarItemProps) {

@@ -28,10 +28,7 @@ export function TrainerLayout() {
         <Route index element={<TrainerDashboard />} />
         <Route path="courses/:courseId" element={<CourseOverviewPage />} />
         <Route path="courses/:courseId/trainees" element={<TraineeRosterPage />} />
-        <Route path="courses/:courseId/content" element={<CourseContentPage />} />
-        <Route path="courses/:courseId/modules" element={<CourseContentPage />} />
-        <Route path="courses/:courseId/modules/:moduleId" element={<CourseContentPage />} />
-        <Route path="courses/:courseId/assignments" element={<CourseContentPage />} />
+        <Route path="courses/:courseId/content/*" element={<CourseContentPage />} />
         <Route path="*" element={<Navigate to="" replace />} />
       </Routes>
     </div>

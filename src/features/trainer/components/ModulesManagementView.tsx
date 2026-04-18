@@ -27,9 +27,10 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
-import { Module } from "@/mocks/course-content";
+import { Module } from "@/types";
 import { motion } from "motion/react";
 import { useToast } from "@/hooks/useToast";
+import { db } from "@/db";
 
 interface ModulesManagementViewProps {
   courseId: string;

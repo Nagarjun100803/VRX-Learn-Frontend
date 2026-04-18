@@ -30,9 +30,10 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
-import { Lesson, Module } from "@/mocks/course-content";
+import { Lesson, Module } from "@/types";
 import { motion } from "motion/react";
 import { useToast } from "@/hooks/useToast";
+import { db } from "@/db";
 
 interface ModuleLessonsViewProps {
   module: Module;
@@ -44,10 +45,15 @@ function BackNavigation({ label }: { label: string }) {
   const navigate = useNavigate();
   const { courseId } = useParams();
   
+  const handleBack = () => {
+    const root = window.location.pathname.includes("/admin") ? "/admin" : "/trainer";
+    navigate(`${root}/courses/${courseId}/content/modules`);
+  };
+
   return (
     <div 
       className="flex items-center gap-2 mb-4 py-2 cursor-pointer text-text-secondary hover:text-text-primary transition-colors"
-      onClick={() => navigate(`/trainer/courses/${courseId}/modules`)}
+      onClick={handleBack}
     >
       <ArrowLeft className="size-4" />
       <span className="text-sm">{label}</span>
@@ -56,6 +62,19 @@ function BackNavigation({ label }: { label: string }) {
 }
 
 export function ModuleLessonsView({ module, lessons: initialLessons, isAdmin }: ModuleLessonsViewProps) {
+  console.log("ModuleLessonsView Render:", { 
+    moduleTitle: module?.title, 
+    initialLessonsCount: initialLessons?.length 
+  });
+
+  if (!module) {
+    return (
+      <div className="flex flex-1 h-full items-center justify-center text-text-secondary bg-bg-primary">
+        Module not found
+      </div>
+    );
+  }
+
   const [lessons, setLessons] = useState<Lesson[]>(initialLessons);
   const { toast } = useToast();
   const isReorderingRef = useRef(false);
