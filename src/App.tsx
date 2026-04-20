@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { useTheme } from "@/hooks/useTheme";
 import { AdminLayout } from "@/layouts/AdminLayout";
 import { TrainerLayout } from "@/layouts/TrainerLayout";
 import { TraineeLayout } from "@/layouts/TraineeLayout";
@@ -8,6 +9,7 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 
 function AppContent() {
   const { role } = useAuth();
+  useTheme();
 
   return (
     <>

@@ -129,7 +129,10 @@ export function LessonDialog({ isOpen, onClose, moduleId, lesson, onSuccess }: L
           title: formData.title,
           description: formData.description,
           media_id: `MEDIA-${Date.now()}`, // Simulated media_id
-          mime_type: payload.contentType
+          mime_type: payload.contentType,
+          url: payload.contentType === "application/pdf" 
+            ? "https://www.w3schools.com/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
+            : "https://www.w3schools.com/html/mov_bbb.mp4"
         });
 
         toast({

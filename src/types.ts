@@ -7,6 +7,7 @@ export interface Lesson {
   module_id: string;
   media_id: string;
   mime_type: LessonMimeType;
+  url?: string | null;
 }
 
 export interface Assignment {

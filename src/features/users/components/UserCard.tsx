@@ -8,9 +8,9 @@ interface UserCardProps {
 }
 
 const roleStyles = {
-  admin: "bg-text-primary/5 text-text-primary shadow-border",
-  trainer: "bg-accent-blue/5 text-accent-blue shadow-border",
-  trainee: "bg-text-secondary/5 text-text-secondary shadow-border",
+  admin: "bg-bg-secondary text-text-primary shadow-border",
+  trainer: "bg-accent-blue/10 text-accent-blue shadow-border",
+  trainee: "bg-bg-secondary text-text-secondary shadow-border",
 };
 
 const formatDate = (dateString: string | null) => {
@@ -44,7 +44,7 @@ export function UserCard({ user }: UserCardProps) {
         <Badge variant="secondary" className={`capitalize font-medium text-[10px] px-2 py-0 h-5 ${roleStyles[user.role]}`}>
           {user.role}
         </Badge>
-        <Badge variant="secondary" className="bg-green-500/10 text-green-600 shadow-border text-[10px] px-2 py-0 h-5">
+        <Badge variant="secondary" className="bg-green-500/10 text-green-600 dark:text-green-400 shadow-border text-[10px] px-2 py-0 h-5">
           Active
         </Badge>
       </div>

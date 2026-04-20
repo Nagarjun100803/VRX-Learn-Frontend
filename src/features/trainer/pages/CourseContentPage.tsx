@@ -21,6 +21,7 @@ import { ModuleLessonsView } from "../components/ModuleLessonsView";
 import { ModulesManagementView } from "../components/ModulesManagementView";
 import { AssignmentsListView } from "../components/AssignmentsListView";
 import { AssignmentDetailView } from "../components/AssignmentDetailView";
+import { LessonPlayerView } from "../components/LessonPlayerView";
 import { ModuleDialog } from "../components/ModuleDialog";
 import { AssignmentDialog } from "../components/AssignmentDialog";
 import { Module, Assignment } from "@/types";
@@ -397,7 +398,10 @@ export function CourseContentPage() {
             )
           } />
           <Route path="modules/:moduleId" element={
-            <ModuleLessonsRouteWrapper isAdmin={isAdmin} courseId={courseId || ""} />
+            <ModuleLessonsRouteWrapper isAdmin={isAdmin} courseId={courseId || ""} navigateTo={navigateTo} />
+          } />
+          <Route path="modules/:moduleId/lessons/:lessonId" element={
+            <LessonPlayerRouteWrapper />
           } />
           <Route path="assignments" element={
              isMobile ? (
@@ -603,7 +607,15 @@ interface SidebarItemProps {
 /**
  * Wrapper for ModuleLessonsView to capture nested moduleId param and fetch data
  */
-function ModuleLessonsRouteWrapper({ isAdmin, courseId }: { isAdmin: boolean, courseId: string }) {
+function ModuleLessonsRouteWrapper({ 
+  isAdmin, 
+  courseId, 
+  navigateTo 
+}: { 
+  isAdmin: boolean; 
+  courseId: string; 
+  navigateTo: (path: string) => void;
+}) {
   const { moduleId } = useParams();
   const selectedModule = moduleId ? db.getModule(courseId, moduleId || "") : null;
   const lessons = moduleId ? db.getLessonsByModule(moduleId) : [];
@@ -624,6 +636,35 @@ function ModuleLessonsRouteWrapper({ isAdmin, courseId }: { isAdmin: boolean, co
       module={selectedModule}
       lessons={lessons}
       isAdmin={isAdmin}
+      onViewLesson={(lessonId) => navigateTo(`/modules/${moduleId}/lessons/${lessonId}`)}
+    />
+  );
+}
+
+/**
+ * Wrapper for LessonPlayerView to capture params and fetch lesson data
+ */
+function LessonPlayerRouteWrapper() {
+  const { moduleId, lessonId } = useParams();
+  const navigate = useNavigate();
+
+  const lesson = (moduleId && lessonId) ? db.getLesson(moduleId, lessonId) : null;
+
+  if (!lesson) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full w-full text-sm text-text-secondary bg-bg-primary">
+        <div className="size-12 rounded-full bg-bg-secondary flex items-center justify-center mb-4">
+          <AlertCircle className="size-6 opacity-40" />
+        </div>
+        Lesson not found
+      </div>
+    );
+  }
+
+  return (
+    <LessonPlayerView 
+      lesson={lesson} 
+      onBack={() => navigate(-1)} 
     />
   );
 }

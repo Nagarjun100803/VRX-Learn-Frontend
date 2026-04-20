@@ -90,9 +90,9 @@ export function TraineeList({ trainees, onClearFilters }: TraineeListProps) {
 
 function RoleBadge({ role }: { role: UserRole }) {
   const styles = {
-    admin: "bg-red-50 text-red-600 border-red-100",
-    trainer: "bg-blue-50 text-blue-600 border-blue-100",
-    trainee: "bg-gray-50 text-gray-600 border-gray-200",
+    admin: "bg-accent-red/10 text-accent-red border-accent-red/20",
+    trainer: "bg-accent-blue/10 text-accent-blue border-accent-blue/20",
+    trainee: "bg-bg-secondary text-text-secondary border-border-subtle",
   };
 
   return (

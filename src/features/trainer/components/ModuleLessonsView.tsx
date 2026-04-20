@@ -40,6 +40,7 @@ interface ModuleLessonsViewProps {
   module: Module;
   lessons: Lesson[];
   isAdmin: boolean;
+  onViewLesson: (lessonId: string) => void;
 }
 
 function BackNavigation({ label }: { label: string }) {
@@ -62,7 +63,7 @@ function BackNavigation({ label }: { label: string }) {
   );
 }
 
-export function ModuleLessonsView({ module, lessons: initialLessons, isAdmin }: ModuleLessonsViewProps) {
+export function ModuleLessonsView({ module, lessons: initialLessons, isAdmin, onViewLesson }: ModuleLessonsViewProps) {
   console.log("ModuleLessonsView Render:", { 
     moduleTitle: module?.title, 
     initialLessonsCount: initialLessons?.length 
@@ -101,6 +102,10 @@ export function ModuleLessonsView({ module, lessons: initialLessons, isAdmin }: 
   const handleOpenEditLesson = (lesson: Lesson) => {
     setEditingLesson(lesson);
     setIsLessonDialogOpen(true);
+  };
+
+  const handleViewLesson = (lesson: Lesson) => {
+    onViewLesson(lesson.id);
   };
 
   const sensors = useSensors(
@@ -245,6 +250,7 @@ export function ModuleLessonsView({ module, lessons: initialLessons, isAdmin }: 
                     isAdmin={isAdmin}
                     showHandle={showDragHandle}
                     onEdit={() => handleOpenEditLesson(lesson)}
+                    onView={() => handleViewLesson(lesson)}
                   />
                 ))}
               </div>
@@ -268,12 +274,14 @@ function SortableLessonRow({
   lesson, 
   isAdmin, 
   showHandle,
-  onEdit
+  onEdit,
+  onView
 }: { 
   lesson: Lesson; 
   isAdmin: boolean;
   showHandle: boolean;
   onEdit: () => void;
+  onView: () => void;
 }) {
   const {
     attributes,
@@ -329,7 +337,11 @@ function SortableLessonRow({
         </div>
 
         <div className="flex items-center gap-0.5 opacity-0 group-hover/row:opacity-100 transition-opacity">
-          <ActionButton icon={<Eye className="size-4" />} tooltip="View" />
+          <ActionButton 
+            icon={<Eye className="size-4" />} 
+            tooltip="View" 
+            onClick={onView}
+          />
           <ActionButton icon={<Pencil className="size-4" />} tooltip="Edit" onClick={onEdit} />
           <ActionButton icon={<Trash2 className="size-4" />} tooltip="Delete" className="hover:text-accent-red hover:bg-accent-red/5" />
         </div>
@@ -337,10 +349,11 @@ function SortableLessonRow({
 
       {/* Mobile Card */}
       <div 
+        onClick={onView}
         {...(!showHandle ? {} : listeners)}
         {...(!showHandle ? {} : attributes)}
         className={`
-          md:hidden bg-bg-primary p-4 rounded-card shadow-border space-y-3
+          md:hidden bg-bg-primary p-4 rounded-card shadow-border space-y-3 cursor-pointer active:bg-bg-secondary
           ${isDragging ? "shadow-2xl opacity-100" : ""}
         `}
       >

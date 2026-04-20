@@ -8,9 +8,9 @@ interface UserRowProps {
 }
 
 const roleStyles = {
-  admin: "bg-text-primary/5 text-text-primary shadow-border",
-  trainer: "bg-accent-blue/5 text-accent-blue shadow-border",
-  trainee: "bg-text-secondary/5 text-text-secondary shadow-border",
+  admin: "bg-bg-secondary text-text-primary shadow-border",
+  trainer: "bg-accent-blue/10 text-accent-blue shadow-border",
+  trainee: "bg-bg-secondary text-text-secondary shadow-border",
 };
 
 const formatDate = (dateString: string | null) => {

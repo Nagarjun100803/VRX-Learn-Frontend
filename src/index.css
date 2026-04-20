@@ -25,9 +25,9 @@
   --font-size-caption: 12px;
 
   /* Shadows */
-  --shadow-border: 0px 0px 0px 1px rgba(0, 0, 0, 0.08);
-  --shadow-card: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.02), 0 12px 24px rgba(0, 0, 0, 0.03);
-  --shadow-focus: 0 0 0 2px #ffffff, 0 0 0 4px #0a72ef;
+  --shadow-border: var(--border-shadow);
+  --shadow-card: var(--border-shadow), 0 2px 4px rgba(0, 0, 0, 0.02), 0 12px 24px rgba(0, 0, 0, 0.03);
+  --shadow-focus: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--accent-blue);
 
   /* Radius */
   --radius-button: 6px;
@@ -35,47 +35,63 @@
   --radius-image: 12px;
 
   /* Colors - Semantic Mapping */
-  --color-bg-primary: #ffffff;
-  --color-bg-secondary: #fafafa;
-  --color-text-primary: #171717;
-  --color-text-secondary: #4d4d4d;
-  --color-border-subtle: rgba(0, 0, 0, 0.08);
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-border-subtle: var(--border-subtle);
   --color-accent-blue: #0a72ef;
   --color-accent-pink: #de1d8d;
   --color-accent-red: #ff5b4f;
 
   /* shadcn UI variables mapping */
-  --color-background: var(--bg-primary);
-  --color-foreground: var(--text-primary);
+  --color-background: var(--color-bg-primary);
+  --color-foreground: var(--color-text-primary);
   
-  --color-card: var(--bg-primary);
-  --color-card-foreground: var(--text-primary);
+  --color-card: var(--color-bg-primary);
+  --color-card-foreground: var(--color-text-primary);
   
-  --color-popover: var(--bg-primary);
-  --color-popover-foreground: var(--text-primary);
+  --color-popover: var(--color-bg-primary);
+  --color-popover-foreground: var(--color-text-primary);
   
-  --color-primary: var(--text-primary);
-  --color-primary-foreground: var(--bg-primary);
+  --color-primary: var(--color-text-primary);
+  --color-primary-foreground: var(--color-bg-primary);
   
-  --color-secondary: var(--bg-secondary);
-  --color-secondary-foreground: var(--text-primary);
+  --color-secondary: var(--color-bg-secondary);
+  --color-secondary-foreground: var(--color-text-primary);
   
-  --color-muted: var(--bg-secondary);
-  --color-muted-foreground: var(--text-secondary);
+  --color-muted: var(--color-bg-secondary);
+  --color-muted-foreground: var(--color-text-secondary);
   
-  --color-accent: var(--bg-secondary);
-  --color-accent-foreground: var(--text-primary);
+  --color-accent: var(--color-bg-secondary);
+  --color-accent-foreground: var(--color-text-primary);
   
-  --color-destructive: var(--accent-red);
+  --color-destructive: var(--color-accent-red);
   --color-destructive-foreground: #ffffff;
   
-  --color-border: var(--border-subtle);
-  --color-input: var(--border-subtle);
-  --color-ring: var(--accent-blue);
+  --color-border: var(--color-border-subtle);
+  --color-input: var(--color-border-subtle);
+  --color-ring: var(--color-accent-blue);
 }
 
 :root {
   --radius: 0.5rem;
+  --bg-primary: #ffffff;
+  --bg-secondary: #fafafa;
+  --text-primary: #171717;
+  --text-secondary: #4d4d4d;
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0.08);
+}
+
+.dark {
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #111111;
+  --text-primary: #ededed;
+  --text-secondary: #a1a1a1;
+  --border-subtle: rgba(255, 255, 255, 0.12);
+  --border-shadow: 0px 0px 0px 1px rgba(255, 255, 255, 0.12);
+  --shadow-card: var(--border-shadow);
 }
 
 @layer base {
@@ -90,6 +106,77 @@
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-medium tracking-tight-md;
+  }
+
+  /* Improved Markdown Styles for Dark/Light Mode */
+  .markdown-body {
+    background-color: transparent !important;
+    color: var(--text-primary) !important;
+    font-family: var(--font-sans) !important;
+    line-height: 1.6 !important;
+  }
+
+  .markdown-body p, 
+  .markdown-body li {
+    color: var(--text-secondary) !important;
+    margin-bottom: 12px !important;
+  }
+
+  .markdown-body h1,
+  .markdown-body h2,
+  .markdown-body h3,
+  .markdown-body h4,
+  .markdown-body h5,
+  .markdown-body h6 {
+    color: var(--text-primary) !important;
+    border-bottom: 1px solid var(--border-subtle) !important;
+    padding-bottom: 8px !important;
+    margin-top: 24px !important;
+    margin-bottom: 16px !important;
+    font-weight: 600 !important;
+  }
+  
+  .markdown-body ul, .markdown-body ol {
+    padding-left: 20px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .markdown-body li {
+    margin-bottom: 4px !important;
+  }
+
+  .markdown-body blockquote {
+    border-left: 4px solid var(--border-subtle) !important;
+    padding-left: 16px !important;
+    color: var(--text-secondary) !important;
+    font-style: italic !important;
+    margin-bottom: 16px !important;
+  }
+  
+  .markdown-body code {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    padding: 0.2em 0.4em !important;
+    border-radius: 4px !important;
+    font-family: var(--font-mono) !important;
+    font-size: 85% !important;
+  }
+
+  .markdown-body pre {
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-subtle) !important;
+    padding: 16px !important;
+    border-radius: 8px !important;
+    overflow-x: auto !important;
+  }
+
+  .markdown-body pre code {
+    background: transparent !important;
+    padding: 0 !important;
+  }
+
+  .dark .markdown-body pre {
+    background: #111111 !important;
   }
 }
 

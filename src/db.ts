@@ -27,9 +27,52 @@ export const DB = {
   ],
   lessons: [
     // Module 1 Lessons
-    { id: "L-1", title: "Course Overview", description: "A high-level look at what we will build.", module_id: "M-1", media_id: "ME-1", mime_type: "application/pdf" },
-    { id: "L-2", title: "Setting up your Dev Environment", description: "Configuring Python, Virtualenv, and VS Code.", module_id: "M-1", media_id: "ME-2", mime_type: "video/mp4" },
-    { id: "L-3", title: "First Steps with FastAPI", description: null, module_id: "M-1", media_id: "ME-3", mime_type: "video/mp4" },
+    { 
+      id: "L-1", 
+      title: "Course Overview", 
+      description: `
+# Welcome to Advanced FastAPI
+
+In this lesson, we will explore the core architecture of the application we are going to build.
+
+## What you will learn:
+- **Project Structure**: How to organize a large-scale FastAPI project.
+- **Asynchronous Patterns**: Leveraging \`async\` and \`await\` for high performance.
+- **Dependency Injection**: Mastering the DI system.
+
+### Requirements:
+- Python 3.9+
+- Basic knowledge of REST APIs
+
+> "FastAPI is a modern, fast (high-performance), web framework for building APIs with Python."
+`, 
+      module_id: "M-1", 
+      media_id: "ME-1", 
+      mime_type: "video/mp4",
+      url: "https://www.w3schools.com/html/mov_bbb.mp4"
+    },
+    { 
+      id: "L-2", 
+      title: "Sample PDF Lesson", 
+      description: `
+# Course Documentation
+
+This document contains all the essential information you need to follow the course.
+
+## Topics Covered:
+- Environment Setup
+- Core Concepts
+- Graduation Requirements
+
+*Please review this PDF carefully.*
+`, 
+      module_id: "M-1", 
+      media_id: "ME-2", 
+      mime_type: "application/pdf",
+      url: "https://api.slingacademy.com/v1/sample-data/files/text-and-images.pdf"
+    },
+    { id: "L-3", title: "Setting up your Dev Environment", description: "Configuring Python, Virtualenv, and VS Code.", module_id: "M-1", media_id: "ME-3", mime_type: "video/mp4" },
+    { id: "L-4", title: "First Steps with FastAPI", description: null, module_id: "M-1", media_id: "ME-4", mime_type: "video/mp4" },
     { id: "L-4", title: "Path Parameters & Query Parameters", description: "Deep dive into dynamic routing.", module_id: "M-1", media_id: "ME-4", mime_type: "application/pdf" },
     { id: "L-5", title: "Request Body & Pydantic", description: "Data validation made easy with Pydantic models.", module_id: "M-1", media_id: "ME-5", mime_type: "video/mp4" },
     { id: "L-6", title: "Module 1 Conclusion", description: "Recap of what we learned.", module_id: "M-1", media_id: "ME-6", mime_type: "application/pdf" },
@@ -752,7 +795,8 @@ export const db = {
     title: string; 
     description: string; 
     media_id: string; 
-    mime_type: LessonMimeType 
+    mime_type: LessonMimeType;
+    url?: string | null;
   }): Lesson {
     console.log("db.createLesson", { moduleId, data });
     const newLesson: Lesson = {
@@ -761,7 +805,8 @@ export const db = {
       title: data.title,
       description: data.description,
       media_id: data.media_id,
-      mime_type: data.mime_type
+      mime_type: data.mime_type,
+      url: data.url
     };
     DB.lessons.push(newLesson);
     return newLesson;

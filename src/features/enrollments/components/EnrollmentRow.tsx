@@ -9,17 +9,17 @@ interface EnrollmentRowProps {
 }
 
 const roleStyles = {
-  admin: "bg-text-primary/5 text-text-primary shadow-border",
-  trainer: "bg-accent-blue/5 text-accent-blue shadow-border",
-  trainee: "bg-text-secondary/5 text-text-secondary shadow-border",
+  admin: "bg-bg-secondary text-text-primary shadow-border",
+  trainer: "bg-accent-blue/10 text-accent-blue shadow-border",
+  trainee: "bg-bg-secondary text-text-secondary shadow-border",
 };
 
 const statusStyles = {
-  pending: "bg-text-secondary/10 text-text-secondary shadow-border",
+  pending: "bg-bg-secondary text-text-secondary shadow-border",
   "in-progress": "bg-accent-blue/10 text-accent-blue shadow-border",
-  suspended: "bg-yellow-500/10 text-yellow-600 shadow-border",
+  suspended: "bg-orange-500/10 text-orange-600 dark:text-orange-400 shadow-border",
   dropped: "bg-accent-red/10 text-accent-red shadow-border",
-  completed: "bg-green-500/10 text-green-600 shadow-border",
+  completed: "bg-green-500/10 text-green-600 dark:text-green-400 shadow-border",
 };
 
 const statusLabels = {
