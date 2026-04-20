@@ -1,5 +1,9 @@
+import { Routes, Route, Navigate } from "react-router-dom";
 import { RoleSwitcher } from "@/components/RoleSwitcher";
 import { ProfileDropdown } from "@/features/admin/components/ProfileDropdown";
+import TraineeDashboard from "@/features/trainee/pages/TraineeDashboard";
+import { CourseOverviewPage } from "@/features/trainer/pages/CourseOverviewPage";
+import { CourseContentPage } from "@/features/trainer/pages/CourseContentPage";
 
 export function TraineeLayout() {
   return (
@@ -19,16 +23,12 @@ export function TraineeLayout() {
         </div>
       </nav>
       
-      <main className="container-vercel py-12">
-        <header className="space-y-1">
-          <h1 className="text-section font-semibold tracking-tight-lg">
-            Trainee Dashboard
-          </h1>
-          <p className="text-text-secondary text-body">
-            Welcome to your learning portal. Start your courses today.
-          </p>
-        </header>
-      </main>
+      <Routes>
+        <Route index element={<TraineeDashboard />} />
+        <Route path="courses/:courseId" element={<CourseOverviewPage />} />
+        <Route path="courses/:courseId/content/*" element={<CourseContentPage />} />
+        <Route path="*" element={<Navigate to="" replace />} />
+      </Routes>
     </div>
   );
 }

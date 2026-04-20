@@ -21,6 +21,7 @@ import { ModuleLessonsView } from "../components/ModuleLessonsView";
 import { ModulesManagementView } from "../components/ModulesManagementView";
 import { AssignmentsListView } from "../components/AssignmentsListView";
 import { AssignmentDetailView } from "../components/AssignmentDetailView";
+import { TraineeAssignmentDetailView } from "../components/TraineeAssignmentDetailView";
 import { LessonPlayerView } from "../components/LessonPlayerView";
 import { ModuleDialog } from "../components/ModuleDialog";
 import { AssignmentDialog } from "../components/AssignmentDialog";
@@ -48,7 +49,10 @@ export function CourseContentPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { role: userRole } = useAuth();
-  const isAdmin = userRole === "admin";
+  const isAdmin = userRole === "admin" || userRole === "trainer";
+  const isTrainer = userRole === "trainer";
+  const isTrainee = userRole === "trainee";
+
   const isMobile = useIsMobile();
 
   const content = courseId ? db.getCourse(courseId) : null;
@@ -100,7 +104,7 @@ export function CourseContentPage() {
 
   // Helper for navigating within course context
   const navigateTo = (path: string) => {
-    const root = isAdmin ? "/admin" : "/trainer";
+    const root = userRole === "admin" ? "/admin" : userRole === "trainer" ? "/trainer" : "/trainee";
     navigate(`${root}/courses/${courseId}/content${path}`);
   };
 
@@ -152,7 +156,7 @@ export function CourseContentPage() {
       navigateTo("");
       return;
     }
-    const basePath = isAdmin ? "/admin" : "/trainer";
+    const basePath = userRole === "admin" ? "/admin" : userRole === "trainer" ? "/trainer" : "/trainee";
     navigate(`${basePath}/courses/${courseId}`);
   };
 
@@ -251,6 +255,7 @@ export function CourseContentPage() {
                         onClick={() => handleSelectModule(module.id)}
                         onEdit={() => handleOpenEditModule(module)}
                         onDelete={() => {}}
+                        canEdit={!isTrainee}
                       />
                     ))}
                     {modules.length === 0 && (
@@ -300,6 +305,8 @@ export function CourseContentPage() {
                         onClick={() => handleSelectAssignment(assignment.id)}
                         onEdit={() => handleOpenEditAssignment(assignment)}
                         onDelete={() => {}}
+                        canEdit={!isTrainee}
+                        isAssignment
                       />
                     ))}
                     {assignments.length === 0 && (
@@ -336,6 +343,7 @@ export function CourseContentPage() {
                 courseId={courseId || ""}
                 onBack={handleBackToOverview} 
                 isAdmin={isAdmin}
+                userRole={userRole}
                 view="root"
                 navigateTo={navigateTo}
                 onSelectModule={handleSelectModule}
@@ -374,6 +382,7 @@ export function CourseContentPage() {
                 courseId={courseId || ""}
                 onBack={handleBackToOverview} 
                 isAdmin={isAdmin}
+                userRole={userRole}
                 view="modules"
                 navigateTo={navigateTo}
                 onSelectModule={handleSelectModule}
@@ -410,6 +419,7 @@ export function CourseContentPage() {
                  courseId={courseId || ""}
                  onBack={handleBackToOverview} 
                  isAdmin={isAdmin}
+                 userRole={userRole}
                  view="assignments"
                  navigateTo={navigateTo}
                  onSelectModule={handleSelectModule}
@@ -433,7 +443,9 @@ export function CourseContentPage() {
              )
           } />
           <Route path="assignments/:assignmentId" element={
-             <AssignmentDetailView courseId={courseId || ""} />
+             isTrainee 
+               ? <TraineeAssignmentDetailView courseId={courseId || ""} />
+               : <AssignmentDetailView courseId={courseId || ""} />
           } />
           <Route path="*" element={<Navigate to="" replace />} />
         </Routes>
@@ -468,6 +480,7 @@ function MobileCourseContentNavigation({
   courseId,
   onBack, 
   isAdmin,
+  userRole,
   view,
   navigateTo,
   onSelectModule,
@@ -483,6 +496,7 @@ function MobileCourseContentNavigation({
   courseId: string;
   onBack: () => void;
   isAdmin: boolean;
+  userRole: string;
   view: SidebarView;
   navigateTo: (path: string) => void;
   onSelectModule: (id: string) => void;
@@ -495,7 +509,8 @@ function MobileCourseContentNavigation({
   assignments: Assignment[];
 }) {
   const navigate = useNavigate();
-  const basePath = isAdmin ? `/admin/courses/${courseId}` : `/trainer/courses/${courseId}`;
+  const root = userRole === "admin" ? "/admin" : userRole === "trainer" ? "/trainer" : "/trainee";
+  const basePath = `${root}/courses/${courseId}`;
 
   if (view === "modules") {
     return (
@@ -602,6 +617,8 @@ interface SidebarItemProps {
   onClick: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  canEdit?: boolean;
+  isAssignment?: boolean;
 }
 
 /**
@@ -669,7 +686,7 @@ function LessonPlayerRouteWrapper() {
   );
 }
 
-function SidebarItem({ id, title, isActive, onClick, onEdit, onDelete }: SidebarItemProps) {
+function SidebarItem({ id, title, isActive, onClick, onEdit, onDelete, canEdit = true }: SidebarItemProps) {
   return (
     <div 
       data-id={id}
@@ -686,6 +703,7 @@ function SidebarItem({ id, title, isActive, onClick, onEdit, onDelete }: Sidebar
         <motion.div 
           layoutId="sidebar-accent"
           className="absolute left-0 w-0.5 h-4 bg-accent-blue rounded-full" 
+          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
         />
       )}
       
@@ -693,20 +711,22 @@ function SidebarItem({ id, title, isActive, onClick, onEdit, onDelete }: Sidebar
         {title}
       </span>
 
-      <div className={`flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity`}>
-        <button 
-          onClick={(e) => { e.stopPropagation(); onEdit(); }}
-          className="size-6 flex items-center justify-center rounded-button hover:bg-bg-primary text-text-secondary hover:text-text-primary transition-colors"
-        >
-          <Pencil className="size-3" />
-        </button>
-        <button 
-          onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          className="size-6 flex items-center justify-center rounded-button hover:bg-bg-primary text-text-secondary hover:text-accent-red transition-colors"
-        >
-          <Trash2 className="size-3" />
-        </button>
-      </div>
+      {canEdit && (
+        <div className={`flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity`}>
+          <button 
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            className="size-6 flex items-center justify-center rounded-button hover:bg-bg-primary text-text-secondary hover:text-text-primary transition-colors"
+          >
+            <Pencil className="size-3" />
+          </button>
+          <button 
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            className="size-6 flex items-center justify-center rounded-button hover:bg-bg-primary text-text-secondary hover:text-accent-red transition-colors"
+          >
+            <Trash2 className="size-3" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

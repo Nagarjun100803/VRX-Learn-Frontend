@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, BookOpen, Layers, FileText, Users, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
-import { MOCK_TRAINER_COURSES } from "../types";
+import { db } from "@/db";
 import { DefaultThumbnail } from "../components/DefaultThumbnail";
 
 export function CourseOverviewPage() {
@@ -10,8 +10,19 @@ export function CourseOverviewPage() {
   const navigate = useNavigate();
   const { role: userRole } = useAuth();
   
-  const isAdmin = userRole === "admin";
-  const course = MOCK_TRAINER_COURSES.find((c) => c.courseId === courseId);
+  const isAdmin = userRole === "admin" || userRole === "trainer";
+  const isTrainer = userRole === "trainer";
+  const isTrainee = userRole === "trainee";
+
+  const course = courseId ? db.getCourse(courseId) : null;
+  const modules = courseId ? db.getModulesByCourse(courseId) : [];
+  const assignments = courseId ? db.getAssignmentsByCourse(courseId) : [];
+  
+  const totalLessons = modules.reduce((acc, m) => acc + db.getLessonsByModule(m.id).length, 0);
+
+  const rootPath = userRole === "admin" ? "/admin" : userRole === "trainer" ? "/trainer" : "/trainee";
+  const basePath = `${rootPath}/courses/${courseId}`;
+  const dashboardPath = userRole === "admin" ? "/admin/courses" : rootPath;
 
   if (!course) {
     return (
@@ -20,38 +31,36 @@ export function CourseOverviewPage() {
         <Button 
           variant="ghost" 
           className="mt-4" 
-          onClick={() => navigate(isAdmin ? "/admin/courses" : "/trainer")}
+          onClick={() => navigate(dashboardPath)}
         >
           <ArrowLeft className="size-4 mr-2" />
-          Back to {isAdmin ? "Courses" : "Dashboard"}
+          Back to Dashboard
         </Button>
       </div>
     );
   }
 
-  const basePath = isAdmin ? `/admin/courses/${courseId}` : `/trainer/courses/${courseId}`;
-
   return (
     <main className="container-vercel py-12 space-y-12 pb-20 min-h-screen">
       {/* Back Link */}
       <button 
-        onClick={() => navigate(isAdmin ? "/admin/courses" : "/trainer")}
+        onClick={() => navigate(dashboardPath)}
         className="flex items-center text-sm font-medium text-text-secondary hover:text-text-primary transition-colors group"
       >
         <ArrowLeft className="size-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-        Back to {isAdmin ? "Courses" : "Dashboard"}
+        Back to Dashboard
       </button>
 
       {/* Hero Section */}
       <section className="flex flex-col md:flex-row gap-8 items-start">
         <DefaultThumbnail 
-          courseName={course.courseName} 
+          courseName={course.title} 
           className="w-full md:w-64 aspect-video md:aspect-[4/3] rounded-card shadow-border shrink-0" 
         />
         <div className="space-y-4 flex-1 min-w-0">
           <div className="space-y-2">
             <h1 className="text-3xl md:text-4xl font-bold text-text-primary tracking-tight leading-tight line-clamp-2">
-              {course.courseName}
+              {course.title}
             </h1>
             <p className="text-text-secondary text-base leading-relaxed max-w-2xl">
               {course.shortDescription || "No description provided."}
@@ -59,10 +68,10 @@ export function CourseOverviewPage() {
           </div>
           <div className="flex items-center gap-2">
             <div className="size-6 bg-accent-blue/10 text-accent-blue rounded-full flex items-center justify-center text-[10px] font-bold">
-              {course.courseName.charAt(0)}
+              {course.trainerName.charAt(0)}
             </div>
             <span className="text-sm text-text-secondary">
-              Trainer: <span className="text-text-primary font-medium">Arjun Kumar</span>
+              Trainer: <span className="text-text-primary font-medium">{course.trainerName}</span>
             </span>
           </div>
         </div>
@@ -70,32 +79,34 @@ export function CourseOverviewPage() {
 
       {/* KPI Strip */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPIItem label="Modules" value={course.noOfModules} icon={<Layers className="size-4" />} />
-        <KPIItem label="Lessons" value={course.noOfLessons} icon={<BookOpen className="size-4" />} />
-        <KPIItem label="Assignments" value={course.noOfAssignments} icon={<FileText className="size-4" />} />
-        <KPIItem label="Trainees" value={course.totalTrainees} icon={<Users className="size-4" />} />
+        <KPIItem label="Modules" value={modules.length} icon={<Layers className="size-4" />} />
+        <KPIItem label="Lessons" value={totalLessons} icon={<BookOpen className="size-4" />} />
+        <KPIItem label="Assignments" value={assignments.length} icon={<FileText className="size-4" />} />
+        <KPIItem label="Trainees" value={450 /* Mock value for now */} icon={<Users className="size-4" />} />
       </section>
 
       {/* Navigation Cards */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <section className={`grid grid-cols-1 ${isTrainee ? "" : "md:grid-cols-2"} gap-6`}>
         <NavCard 
           title="Course Content"
-          description="Manage modules, lessons, and assignments."
+          description={isTrainee ? "Browse modules, lessons, and assignments." : "Manage modules, lessons, and assignments."}
           stats={[
-            { label: "Modules", value: course.noOfModules },
-            { label: "Lessons", value: course.noOfLessons },
-            { label: "Assignments", value: course.noOfAssignments }
+            { label: "Modules", value: modules.length },
+            { label: "Lessons", value: totalLessons },
+            { label: "Assignments", value: assignments.length }
           ]}
           onClick={() => navigate(`${basePath}/content`)}
         />
-        <NavCard 
-          title="Trainee Roster"
-          description="View and manage enrolled trainees."
-          stats={[
-            { label: "Total Trainees", value: course.totalTrainees }
-          ]}
-          onClick={() => navigate(`${basePath}/trainees`)}
-        />
+        {!isTrainee && (
+          <NavCard 
+            title="Trainee Roster"
+            description="View and manage enrolled trainees."
+            stats={[
+              { label: "Total Trainees", value: 450 /* Mock value */ }
+            ]}
+            onClick={() => navigate(`${basePath}/trainees`)}
+          />
+        )}
       </section>
     </main>
   );

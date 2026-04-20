@@ -130,16 +130,20 @@ export function ModulesManagementView({
         <div className="p-8 max-w-5xl mx-auto flex items-center justify-between gap-6">
           <div className="space-y-1">
             <h1 className="text-2xl font-bold text-text-primary tracking-tight">Modules</h1>
-            <p className="text-sm text-text-secondary">Manage and organize course modules</p>
+            <p className="text-sm text-text-secondary">
+              {isAdmin ? "Manage and organize course modules" : "View course modules"}
+            </p>
           </div>
           
-          <Button 
-            onClick={onCreateModule}
-            className="h-9 px-4 bg-text-primary text-bg-primary hover:bg-text-primary/90 font-bold text-xs rounded-button transition-all active:scale-95"
-          >
-            <Plus className="size-4 mr-2" />
-            New Module
-          </Button>
+          {isAdmin && (
+            <Button 
+              onClick={onCreateModule}
+              className="h-9 px-4 bg-text-primary text-bg-primary hover:bg-text-primary/90 font-bold text-xs rounded-button transition-all active:scale-95"
+            >
+              <Plus className="size-4 mr-2" />
+              New Module
+            </Button>
+          )}
         </div>
       </div>
 
@@ -155,13 +159,15 @@ export function ModulesManagementView({
           </div>
         )}
         <h1 className="text-xl font-bold text-text-primary tracking-tight">Modules</h1>
-        <Button 
-          onClick={onCreateModule}
-          className="w-full bg-text-primary text-bg-primary h-10 font-bold text-sm rounded-button active:scale-[0.98] transition-transform"
-        >
-          <Plus className="size-4 mr-2" />
-          New Module
-        </Button>
+        {isAdmin && (
+          <Button 
+            onClick={onCreateModule}
+            className="w-full bg-text-primary text-bg-primary h-10 font-bold text-sm rounded-button active:scale-[0.98] transition-transform"
+          >
+            <Plus className="size-4 mr-2" />
+            New Module
+          </Button>
+        )}
       </div>
 
       {/* Modules List Container */}
@@ -275,17 +281,21 @@ function SortableModuleRow({
             tooltip="View Lessons" 
             onClick={(e) => { e.stopPropagation(); onSelect(); }} 
           />
-          <ActionButton 
-            icon={<Pencil className="size-4" />} 
-            tooltip="Edit" 
-            onClick={(e) => { e.stopPropagation(); onEdit(); }} 
-          />
-          <ActionButton 
-            icon={<Trash2 className="size-4" />} 
-            tooltip="Delete" 
-            className="hover:text-accent-red hover:bg-accent-red/5" 
-            onClick={(e) => e.stopPropagation()} 
-          />
+          {isAdmin && (
+            <>
+              <ActionButton 
+                icon={<Pencil className="size-4" />} 
+                tooltip="Edit" 
+                onClick={(e) => { e.stopPropagation(); onEdit(); }} 
+              />
+              <ActionButton 
+                icon={<Trash2 className="size-4" />} 
+                tooltip="Delete" 
+                className="hover:text-accent-red hover:bg-accent-red/5" 
+                onClick={(e) => e.stopPropagation()} 
+              />
+            </>
+          )}
         </div>
       </div>
 
@@ -315,18 +325,22 @@ function SortableModuleRow({
            >
              <Eye className="size-3" /> View
            </button>
-           <button 
-             onClick={(e) => { e.stopPropagation(); onEdit(); }}
-             className="text-xs font-bold text-text-secondary flex items-center gap-1.5 px-2 py-1 pointer-events-auto"
-           >
-             <Pencil className="size-3" /> Edit
-           </button>
-           <button 
-             onClick={(e) => e.stopPropagation()}
-             className="text-xs font-bold text-accent-red flex items-center gap-1.5 px-2 py-1 pointer-events-auto"
-           >
-             <Trash2 className="size-3" /> Delete
-           </button>
+           {isAdmin && (
+             <>
+               <button 
+                 onClick={(e) => { e.stopPropagation(); onEdit(); }}
+                 className="text-xs font-bold text-text-secondary flex items-center gap-1.5 px-2 py-1 pointer-events-auto"
+               >
+                 <Pencil className="size-3" /> Edit
+               </button>
+               <button 
+                 onClick={(e) => e.stopPropagation()}
+                 className="text-xs font-bold text-accent-red flex items-center gap-1.5 px-2 py-1 pointer-events-auto"
+               >
+                 <Trash2 className="size-3" /> Delete
+               </button>
+             </>
+           )}
         </div>
       </div>
     </div>

@@ -1,5 +1,45 @@
 import { Course, Module, Lesson, LessonMimeType, Assignment, Submission, SubmissionStatus } from "./types";
 
+export type TraineeCourse = {
+  courseId: string;
+  courseName: string;
+  trainerName: string;
+  thumbnailUrl: string | null;
+};
+
+export const traineeCourses: TraineeCourse[] = [
+  {
+    courseId: "C-1", // IMPORTANT: must match existing course
+    courseName: "Advanced FastAPI Development",
+    trainerName: "Arjun Kumar",
+    thumbnailUrl: null
+  },
+  {
+    courseId: "C-2",
+    courseName: "Advanced JavaScript",
+    trainerName: "Jane Smith",
+    thumbnailUrl: null
+  },
+  {
+    courseId: "C-3",
+    courseName: "System Design Basics",
+    trainerName: "Alex Johnson",
+    thumbnailUrl: null
+  },
+  {
+    courseId: "C-4",
+    courseName: "Database Design",
+    trainerName: "Emily Davis",
+    thumbnailUrl: null
+  },
+  {
+    courseId: "C-5",
+    courseName: "API Development with FastAPI",
+    trainerName: "Michael Brown",
+    thumbnailUrl: null
+  }
+];
+
 export const DB = {
   courses: [
     {
@@ -896,5 +936,7 @@ export const db = {
       totalItems,
       totalPages
     };
-  }
+  },
+
+  getTraineeCourses: () => traineeCourses
 };

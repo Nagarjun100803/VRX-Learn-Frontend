@@ -33,6 +33,7 @@ import { Button } from "@/components/ui/button";
 import { Lesson, Module } from "@/types";
 import { motion } from "motion/react";
 import { useToast } from "@/hooks/useToast";
+import { useAuth } from "@/lib/auth-context";
 import { db } from "@/db";
 import { LessonDialog } from "./LessonDialog";
 
@@ -46,9 +47,10 @@ interface ModuleLessonsViewProps {
 function BackNavigation({ label }: { label: string }) {
   const navigate = useNavigate();
   const { courseId } = useParams();
+  const { role } = useAuth();
   
   const handleBack = () => {
-    const root = window.location.pathname.includes("/admin") ? "/admin" : "/trainer";
+    const root = role === "admin" ? "/admin" : role === "trainer" ? "/trainer" : "/trainee";
     navigate(`${root}/courses/${courseId}/content/modules`);
   };
 
@@ -180,20 +182,31 @@ export function ModuleLessonsView({ module, lessons: initialLessons, isAdmin, on
             </p>
           </div>
           
-          <div className="flex items-center gap-3">
-            <Button 
-              onClick={handleOpenCreateLesson}
-              className="h-9 px-4 bg-text-primary text-bg-primary hover:bg-text-primary/90 font-bold text-xs rounded-button"
-            >
-              <Plus className="size-4 mr-2" />
-              New Lesson
-            </Button>
-            
-            <div className="flex items-center gap-1 border-l border-border-subtle pl-3">
-              <ActionButton icon={<Pencil className="size-4" />} tooltip="Edit Module" />
-              <ActionButton icon={<Trash2 className="size-4" />} tooltip="Delete Module" className="hover:text-accent-red hover:bg-accent-red/5" />
+          {!isAdmin && (
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1 border-l border-border-subtle pl-3 invisible">
+                <ActionButton icon={<Pencil className="size-4" />} tooltip="Edit Module" />
+                <ActionButton icon={<Trash2 className="size-4" />} tooltip="Delete Module" className="hover:text-accent-red hover:bg-accent-red/5" />
+              </div>
             </div>
-          </div>
+          )}
+
+          {isAdmin && (
+            <div className="flex items-center gap-3">
+              <Button 
+                onClick={handleOpenCreateLesson}
+                className="h-9 px-4 bg-text-primary text-bg-primary hover:bg-text-primary/90 font-bold text-xs rounded-button"
+              >
+                <Plus className="size-4 mr-2" />
+                New Lesson
+              </Button>
+              
+              <div className="flex items-center gap-1 border-l border-border-subtle pl-3">
+                <ActionButton icon={<Pencil className="size-4" />} tooltip="Edit Module" />
+                <ActionButton icon={<Trash2 className="size-4" />} tooltip="Delete Module" className="hover:text-accent-red hover:bg-accent-red/5" />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -209,13 +222,15 @@ export function ModuleLessonsView({ module, lessons: initialLessons, isAdmin, on
           </p>
         </div>
         
-        <Button 
-          onClick={handleOpenCreateLesson}
-          className="w-full bg-text-primary text-bg-primary h-10 font-bold text-sm rounded-button"
-        >
-          <Plus className="size-4 mr-2" />
-          New Lesson
-        </Button>
+        {isAdmin && (
+          <Button 
+            onClick={handleOpenCreateLesson}
+            className="w-full bg-text-primary text-bg-primary h-10 font-bold text-sm rounded-button"
+          >
+            <Plus className="size-4 mr-2" />
+            New Lesson
+          </Button>
+        )}
       </div>
 
       {/* Lessons List Container */}
@@ -311,12 +326,14 @@ function SortableLessonRow({
       {/* Desktop Row */}
       <div 
         data-id={lesson.id}
+        onClick={onView}
         className="hidden md:flex items-center group/row px-4 py-3 bg-bg-primary hover:bg-bg-secondary rounded-card transition-all cursor-pointer border border-transparent"
       >
         {showHandle && (
           <div 
             {...attributes} 
             {...listeners}
+            onClick={(e) => e.stopPropagation()}
             className="mr-3 text-text-secondary hover:text-text-primary transition-colors cursor-grab active:cursor-grabbing p-1 -ml-2"
           >
             <GripVertical className="size-4" />
@@ -340,10 +357,23 @@ function SortableLessonRow({
           <ActionButton 
             icon={<Eye className="size-4" />} 
             tooltip="View" 
-            onClick={onView}
+            onClick={(e) => { e.stopPropagation(); onView(); }}
           />
-          <ActionButton icon={<Pencil className="size-4" />} tooltip="Edit" onClick={onEdit} />
-          <ActionButton icon={<Trash2 className="size-4" />} tooltip="Delete" className="hover:text-accent-red hover:bg-accent-red/5" />
+          {isAdmin && (
+            <>
+              <ActionButton 
+                icon={<Pencil className="size-4" />} 
+                tooltip="Edit" 
+                onClick={(e) => { e.stopPropagation(); onEdit(); }} 
+              />
+              <ActionButton 
+                icon={<Trash2 className="size-4" />} 
+                tooltip="Delete" 
+                className="hover:text-accent-red hover:bg-accent-red/5" 
+                onClick={(e) => { e.stopPropagation(); }}
+              />
+            </>
+          )}
         </div>
       </div>
 
@@ -371,17 +401,22 @@ function SortableLessonRow({
           </div>
         </div>
         
-        <div className="flex items-center justify-end gap-3 pt-2 border-t border-border-subtle">
-           <button 
-             onClick={(e) => { e.stopPropagation(); onEdit(); }}
-             className="text-xs font-bold text-text-secondary flex items-center gap-1.5 px-2 py-1 pointer-events-auto"
-           >
-             <Pencil className="size-3" /> Edit
-           </button>
-           <button className="text-xs font-bold text-accent-red flex items-center gap-1.5 px-2 py-1 pointer-events-auto">
-             <Trash2 className="size-3" /> Delete
-           </button>
-        </div>
+        {isAdmin && (
+          <div className="flex items-center justify-end gap-3 pt-2 border-t border-border-subtle">
+             <button 
+               onClick={(e) => { e.stopPropagation(); onEdit(); }}
+               className="text-xs font-bold text-text-secondary flex items-center gap-1.5 px-2 py-1 pointer-events-auto"
+             >
+               <Pencil className="size-3" /> Edit
+             </button>
+             <button 
+               onClick={(e) => { e.stopPropagation(); }}
+               className="text-xs font-bold text-accent-red flex items-center gap-1.5 px-2 py-1 pointer-events-auto"
+             >
+               <Trash2 className="size-3" /> Delete
+             </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -396,7 +431,7 @@ function ActionButton({
   icon: React.ReactNode; 
   tooltip?: string;
   className?: string;
-  onClick?: () => void;
+  onClick?: (e: React.MouseEvent) => void;
 }) {
   return (
     <button 
