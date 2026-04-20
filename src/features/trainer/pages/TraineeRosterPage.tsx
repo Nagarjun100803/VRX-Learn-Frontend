@@ -12,7 +12,8 @@ import { MOCK_TRAINEE_ROSTER } from "../roster-types";
 export function TraineeRosterPage() {
   const { courseId } = useParams();
   const navigate = useNavigate();
-  const { role: userRole } = useAuth();
+  const { user } = useAuth();
+  const userRole = user?.role;
   
   const isAdmin = userRole === "admin";
 

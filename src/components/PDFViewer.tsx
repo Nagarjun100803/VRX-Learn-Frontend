@@ -23,8 +23,8 @@ interface PDFViewerProps {
 }
 
 export function PDFViewer({ src }: PDFViewerProps) {
-  const { role } = useAuth();
-  const isAdmin = role === "admin";
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin" || user?.role === "trainer";
   
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);

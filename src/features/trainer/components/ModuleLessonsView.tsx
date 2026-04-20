@@ -47,10 +47,10 @@ interface ModuleLessonsViewProps {
 function BackNavigation({ label }: { label: string }) {
   const navigate = useNavigate();
   const { courseId } = useParams();
-  const { role } = useAuth();
+  const { user } = useAuth();
   
   const handleBack = () => {
-    const root = role === "admin" ? "/admin" : role === "trainer" ? "/trainer" : "/trainee";
+    const root = user?.role === "admin" ? "/admin" : user?.role === "trainer" ? "/trainer" : "/trainee";
     navigate(`${root}/courses/${courseId}/content/modules`);
   };
 

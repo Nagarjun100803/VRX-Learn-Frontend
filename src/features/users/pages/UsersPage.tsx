@@ -1,18 +1,24 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Download, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UsersFilters } from "../components/UsersFilters";
 import { UsersList } from "../components/UsersList";
 import { Pagination } from "../components/Pagination";
 import { CreateUserDialog } from "../components/CreateUserDialog";
-import { MOCK_USERS, User } from "../types";
+import { User } from "../types";
+import { api } from "@/lib/api-client";
 
 export default function UsersPage() {
   // Dialog State
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
+  // Data State
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   // Filter States
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [role, setRole] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [status, setStatus] = useState("active");
@@ -20,72 +26,67 @@ export default function UsersPage() {
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
 
-  // Filtering & Sorting Logic
-  const filteredUsers = useMemo(() => {
-    let result = [...MOCK_USERS];
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 400);
 
-    // Search (resets other filters if used - as per requirement)
-    if (search) {
-      const term = search.toLowerCase();
-      return result.filter(
-        (u) => u.name.toLowerCase().includes(term) || u.email.toLowerCase().includes(term)
-      );
-    }
+    return () => clearTimeout(timer);
+  }, [search]);
 
-    // Role Filter
-    if (role !== "all") {
-      result = result.filter((u) => u.role === role);
-    }
+  // Fetch Logic
+  const fetchUsers = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      
+      const params: any = {
+        page: currentPage,
+        limit,
+      };
 
-    // Status Filter (only active for now)
-    if (status === "active") {
-      result = result.filter((u) => u.status === "active");
-    }
+      if (debouncedSearch) {
+        params.nameOrEmail = debouncedSearch;
+      } else {
+        if (role !== "all") {
+          params.role = role;
+        }
 
-    // Sorting
-    result.sort((a, b) => {
-      switch (sortBy) {
-        case "newest":
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        case "oldest":
-          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-        case "name-asc":
-          return a.name.localeCompare(b.name);
-        case "name-desc":
-          return b.name.localeCompare(a.name);
-        case "last-active":
-          if (!a.lastLogin) return 1;
-          if (!b.lastLogin) return -1;
-          return new Date(b.lastLogin).getTime() - new Date(a.lastLogin).getTime();
-        default:
-          return 0;
+        // Map sortBy to backend parameters
+        if (sortBy === "newest") params.sortByCreatedAt = "desc";
+        if (sortBy === "oldest") params.sortByCreatedAt = "asc";
+        if (sortBy === "name-asc") params.sortByUsername = "asc";
+        if (sortBy === "name-desc") params.sortByUsername = "desc";
+        // for "last-active", we'll just fall back to newest or skip
       }
-    });
 
-    return result;
-  }, [search, role, sortBy, status]);
+      const res = await api.get("list/admin/users", { params });
 
-  // Paginated Data
-  const totalItems = filteredUsers.length;
-  const totalPages = Math.ceil(totalItems / limit);
-  const paginatedUsers = filteredUsers.slice(
-    (currentPage - 1) * limit,
-    currentPage * limit
-  );
+      setUsers(res.data.data);
+      setTotalPages(res.data.totalPages);
+      setTotalItems(res.data.totalItems);
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [debouncedSearch, role, sortBy, currentPage, limit]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleSearchChange = (val: string) => {
     setSearch(val);
-    if (val) {
-      setRole("all");
-      setSortBy("newest");
-      setStatus("active");
-    }
     setCurrentPage(1);
   };
 
   const handleClearFilters = () => {
     setSearch("");
+    setDebouncedSearch("");
     setRole("all");
     setSortBy("newest");
     setStatus("active");
@@ -137,8 +138,13 @@ export default function UsersPage() {
             onStatusChange={(val) => { setStatus(val); setCurrentPage(1); }}
           />
 
-          <div className="space-y-0">
-            <UsersList users={paginatedUsers} onClearFilters={handleClearFilters} />
+          <div className="space-y-0 relative">
+            {isLoading && (
+               <div className="absolute inset-0 bg-bg-primary/50 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-card">
+                 <div className="size-6 border-2 border-border-subtle border-t-text-primary rounded-full animate-spin" />
+               </div>
+            )}
+            <UsersList users={users} onClearFilters={handleClearFilters} />
             {totalItems > 0 && (
               <Pagination
                 currentPage={currentPage}

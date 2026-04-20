@@ -4,31 +4,65 @@ import { useTheme } from "@/hooks/useTheme";
 import { AdminLayout } from "@/layouts/AdminLayout";
 import { TrainerLayout } from "@/layouts/TrainerLayout";
 import { TraineeLayout } from "@/layouts/TraineeLayout";
+import LoginPage from "@/features/auth/pages/LoginPage";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ToastProvider } from "@/components/ui/Toast";
 import { ScrollToTop } from "@/components/ScrollToTop";
 
 function AppContent() {
-  const { role } = useAuth();
+  const { user, isLoading } = useAuth();
   useTheme();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-bg-primary">
+        <div className="size-8 rounded-full border-2 border-border-subtle border-t-text-primary animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <>
       <ScrollToTop />
       <Routes>
-        {role === "admin" && (
-          <Route path="/admin/*" element={<AdminLayout />} />
-        )}
-        {role === "trainer" && (
-          <Route path="/trainer/*" element={<TrainerLayout />} />
-        )}
-        {role === "trainee" && (
-          <Route path="/trainee/*" element={<TraineeLayout />} />
-        )}
+        <Route path="/login" element={<LoginPage />} />
+
+        <Route path="/admin/*" element={
+          <ProtectedRoute roles={["admin"]}>
+            <AdminLayout />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/trainer/*" element={
+          <ProtectedRoute roles={["trainer"]}>
+            <TrainerLayout />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/trainee/*" element={
+          <ProtectedRoute roles={["trainee"]}>
+            <TraineeLayout />
+          </ProtectedRoute>
+        } />
         
-        {/* Redirect to appropriate home based on role */}
+        {/* Default route redirects to login or dashboard based on user state */}
+        <Route 
+          path="/" 
+          element={
+            user 
+              ? <Navigate to={user.role === "admin" ? "/admin" : user.role === "trainer" ? "/trainer" : "/trainee"} replace />
+              : <Navigate to="/login" replace />
+          } 
+        />
+
+        {/* Catch-all route */}
         <Route 
           path="*" 
-          element={<Navigate to={role === "admin" ? "/admin" : role === "trainer" ? "/trainer" : "/trainee"} replace />} 
+          element={
+            user 
+              ? <Navigate to={user.role === "admin" ? "/admin" : user.role === "trainer" ? "/trainer" : "/trainee"} replace />
+              : <Navigate to="/login" replace />
+          } 
         />
       </Routes>
     </>

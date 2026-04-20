@@ -1,12 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const kpiData = {
-  totalUsers: 1240,
-  totalCourses: 32,
-  totalEnrollments: 5432,
-};
+interface KPISectionProps {
+  data: {
+    totalUsers: number;
+    totalCourses: number;
+    totalEnrollments: number;
+  } | null;
+}
 
-export function KPISection() {
+export function KPISection({ data }: KPISectionProps) {
+  const totalUsers = data?.totalUsers ?? 0;
+  const totalCourses = data?.totalCourses ?? 0;
+  const totalEnrollments = data?.totalEnrollments ?? 0;
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       <Card>
@@ -17,7 +23,7 @@ export function KPISection() {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-semibold tracking-tight-md">
-            {kpiData.totalUsers.toLocaleString()}
+            {totalUsers.toLocaleString()}
           </div>
         </CardContent>
       </Card>
@@ -30,7 +36,7 @@ export function KPISection() {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-semibold tracking-tight-md">
-            {kpiData.totalCourses}
+            {totalCourses}
           </div>
         </CardContent>
       </Card>
@@ -43,7 +49,7 @@ export function KPISection() {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-semibold tracking-tight-md">
-            {kpiData.totalEnrollments.toLocaleString()}
+            {totalEnrollments.toLocaleString()}
           </div>
         </CardContent>
       </Card>

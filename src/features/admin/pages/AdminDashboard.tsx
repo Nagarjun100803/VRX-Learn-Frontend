@@ -1,8 +1,31 @@
+import { useState, useEffect } from "react";
 import { KPISection } from "../components/KPISection";
 import { QuickActions } from "../components/QuickActions";
 import { TopCourses } from "../components/TopCourses";
+import { api } from "@/lib/api-client";
 
 export default function AdminDashboard() {
+  const [kpis, setKpis] = useState<{ totalUsers: number; totalCourses: number; totalEnrollments: number } | null>(null);
+  const [courses, setCourses] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [kpisRes, coursesRes] = await Promise.all([
+          api.get("dashboard/admin/kpis"),
+          api.get("dashboard/admin/top-enrolled-courses?n=8")
+        ]);
+
+        setKpis(kpisRes.data);
+        setCourses(coursesRes.data);
+      } catch (error) {
+        console.error("Failed to load admin dashboard", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <div className="min-h-screen bg-bg-primary font-sans selection:bg-accent-blue/10">
       <main className="container-vercel py-12 space-y-12">
@@ -20,7 +43,7 @@ export default function AdminDashboard() {
 
         {/* KPI Section */}
         <section className="space-y-6">
-          <KPISection />
+          <KPISection data={kpis} />
         </section>
 
         {/* Quick Actions Section */}
@@ -33,7 +56,7 @@ export default function AdminDashboard() {
 
         {/* Top Courses Section */}
         <section className="space-y-6">
-          <TopCourses />
+          <TopCourses courses={courses} />
         </section>
       </main>
 

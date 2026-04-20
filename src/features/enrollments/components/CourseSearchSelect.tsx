@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Search, X, BookOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { MOCK_COURSES } from "@/features/courses/types";
+import { Course } from "@/features/courses/types";
 import { motion, AnimatePresence } from "motion/react";
+import { api } from "@/lib/api-client";
 
 interface CourseSearchSelectProps {
   onSelect: (courseId: string, courseName: string) => void;
@@ -13,19 +14,66 @@ interface CourseSearchSelectProps {
 
 export function CourseSearchSelect({ onSelect, selectedId, error, disabled }: CourseSearchSelectProps) {
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const selectedCourse = useMemo(() => {
-    return MOCK_COURSES.find((c) => c.id === selectedId);
-  }, [selectedId]);
-
-  const filteredCourses = useMemo(() => {
-    if (!search) return MOCK_COURSES;
-    const term = search.toLowerCase();
-    return MOCK_COURSES.filter(
-      (c) => c.title.toLowerCase().includes(term)
-    );
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 400);
+    return () => clearTimeout(timer);
   }, [search]);
+
+  // Fetch courses when searching or opening
+  useEffect(() => {
+    if (!isOpen && !debouncedSearch) return;
+
+    const fetchCourses = async () => {
+      try {
+        setIsLoading(true);
+        const params: any = {
+          limit: 10,
+          page: 1
+        };
+
+        if (debouncedSearch) {
+          params.courseNameOrTrainerName = debouncedSearch;
+        }
+
+        const res = await api.get("list/admin/courses", { params });
+        setCourses(res.data.data);
+      } catch (error) {
+        console.error("Failed to fetch courses in select:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, [debouncedSearch, isOpen]);
+
+  // Fetch selected course if only ID is provided
+  useEffect(() => {
+    if (selectedId && !selectedCourse) {
+      const fetchSelected = async () => {
+        try {
+          const res = await api.get("list/admin/courses", { params: { limit: 1, courseNameOrTrainerName: selectedId } });
+          if (res.data.data.length > 0) {
+            setSelectedCourse(res.data.data[0]);
+          }
+        } catch (error) {
+          console.error("Failed to fetch selected course:", error);
+        }
+      };
+      fetchSelected();
+    } else if (!selectedId) {
+      setSelectedCourse(null);
+    }
+  }, [selectedId, selectedCourse]);
 
   return (
     <div className={`space-y-1.5 relative ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}>
@@ -48,7 +96,10 @@ export function CourseSearchSelect({ onSelect, selectedId, error, disabled }: Co
           </div>
           {!disabled && (
             <button
-              onClick={() => onSelect("", "")}
+              onClick={() => {
+                onSelect("", "");
+                setSelectedCourse(null);
+              }}
               className="absolute -top-2 -right-2 size-6 bg-bg-primary shadow-card shadow-border rounded-full flex items-center justify-center text-text-secondary hover:text-accent-red transition-colors z-10"
             >
               <X className="size-3.5" />
@@ -85,12 +136,17 @@ export function CourseSearchSelect({ onSelect, selectedId, error, disabled }: Co
                   exit={{ opacity: 0, y: 4 }}
                   className="absolute top-full left-0 right-0 mt-2 bg-bg-primary shadow-card shadow-border rounded-card z-30 max-h-[240px] overflow-y-auto p-1 space-y-1"
                 >
-                  {filteredCourses.length > 0 ? (
-                    filteredCourses.map((course) => (
+                  {isLoading ? (
+                    <div className="p-4 text-center text-xs text-text-secondary animate-pulse">
+                      Searching...
+                    </div>
+                  ) : courses.length > 0 ? (
+                    courses.map((course) => (
                       <div
                         key={course.id}
                         onClick={() => {
                           onSelect(course.id, course.title);
+                          setSelectedCourse(course);
                           setIsOpen(false);
                           setSearch("");
                         }}

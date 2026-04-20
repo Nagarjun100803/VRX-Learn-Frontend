@@ -8,7 +8,8 @@ import { DefaultThumbnail } from "../components/DefaultThumbnail";
 export function CourseOverviewPage() {
   const { courseId } = useParams();
   const navigate = useNavigate();
-  const { role: userRole } = useAuth();
+  const { user } = useAuth();
+  const userRole = user?.role;
   
   const isAdmin = userRole === "admin" || userRole === "trainer";
   const isTrainer = userRole === "trainer";

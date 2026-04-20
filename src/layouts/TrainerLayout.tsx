@@ -1,5 +1,4 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { RoleSwitcher } from "@/components/RoleSwitcher";
 import { ProfileDropdown } from "@/features/admin/components/ProfileDropdown";
 import TrainerDashboard from "@/features/trainer/pages/TrainerDashboard";
 import { CourseOverviewPage } from "@/features/trainer/pages/CourseOverviewPage";
@@ -18,7 +17,6 @@ export function TrainerLayout() {
             <span className="font-semibold tracking-tight-md">VRX Learn</span>
           </div>
           <div className="flex items-center gap-4">
-            <RoleSwitcher />
             <ProfileDropdown />
           </div>
         </div>

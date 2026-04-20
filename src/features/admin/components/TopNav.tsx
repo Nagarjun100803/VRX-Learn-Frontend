@@ -1,5 +1,4 @@
 import { ProfileDropdown } from "./ProfileDropdown";
-import { RoleSwitcher } from "@/components/RoleSwitcher";
 
 const navItems = [
   { label: "Dashboard", active: true },
@@ -43,7 +42,6 @@ export function TopNav({ activeTab, onTabChange }: TopNavProps) {
         </div>
 
         <div className="flex items-center gap-4">
-          <RoleSwitcher />
           <ProfileDropdown />
         </div>
       </div>

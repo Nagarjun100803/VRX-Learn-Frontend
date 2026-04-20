@@ -48,7 +48,8 @@ export function CourseContentPage() {
   const { courseId, assignmentId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { role: userRole } = useAuth();
+  const { user } = useAuth();
+  const userRole = user?.role;
   const isAdmin = userRole === "admin" || userRole === "trainer";
   const isTrainer = userRole === "trainer";
   const isTrainee = userRole === "trainee";

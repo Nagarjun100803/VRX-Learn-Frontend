@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
-import { Search, X, Check } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { MOCK_USERS, UserRole } from "@/features/users/types";
+import { UserRole, User } from "@/features/users/types";
 import { UserCard } from "./UserCard";
 import { motion, AnimatePresence } from "motion/react";
+import { api } from "@/lib/api-client";
 
 interface UserSearchSelectProps {
   onSelect: (userId: string, userName: string) => void;
@@ -23,24 +24,70 @@ export function UserSearchSelect({
   label = "Trainer"
 }: UserSearchSelectProps) {
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const users = useMemo(() => {
-    if (role === "all") return MOCK_USERS;
-    return MOCK_USERS.filter((u) => u.role === role);
-  }, [role]);
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search]);
 
-  const filteredUsers = useMemo(() => {
-    if (!search) return users;
-    const term = search.toLowerCase();
-    return users.filter(
-      (u) => u.name.toLowerCase().includes(term) || u.email.toLowerCase().includes(term)
-    );
-  }, [search, users]);
+  // Fetch users when searching or opening
+  useEffect(() => {
+    if (!isOpen && !debouncedSearch) return;
 
-  const selectedUser = useMemo(() => {
-    return MOCK_USERS.find((u) => u.id === selectedId);
-  }, [selectedId]);
+    const fetchUsers = async () => {
+      try {
+        setIsLoading(true);
+        const params: any = {
+          limit: 10,
+          page: 1
+        };
+
+        if (debouncedSearch) {
+          params.nameOrEmail = debouncedSearch;
+        } else if (role !== "all") {
+          params.role = role;
+        }
+
+        const res = await api.get("list/admin/users", { params });
+        setUsers(res.data.data);
+      } catch (error) {
+        console.error("Failed to fetch users in select:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, [debouncedSearch, isOpen, role]);
+
+  // Fetch selected user if only ID is provided
+  useEffect(() => {
+    if (selectedId && !selectedUser) {
+      const fetchSelected = async () => {
+        try {
+          // We don't have a single user fetch yet, so we query by id (assuming nameOrEmail can handle ids or just filter list)
+          // For now, let's just try to find it in the list or just leave it blank if not found
+          const res = await api.get("list/admin/users", { params: { limit: 1, nameOrEmail: selectedId } });
+          if (res.data.data.length > 0) {
+            setSelectedUser(res.data.data[0]);
+          }
+        } catch (error) {
+          console.error("Failed to fetch selected user:", error);
+        }
+      };
+      fetchSelected();
+    } else if (!selectedId) {
+      setSelectedUser(null);
+    }
+  }, [selectedId, selectedUser]);
 
   return (
     <div className={`space-y-1.5 relative ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}>
@@ -58,7 +105,10 @@ export function UserSearchSelect({
           />
           {!disabled && (
             <button
-              onClick={() => onSelect("", "")}
+              onClick={() => {
+                onSelect("", "");
+                setSelectedUser(null);
+              }}
               className="absolute -top-2 -right-2 size-6 bg-bg-primary shadow-card shadow-border rounded-full flex items-center justify-center text-text-secondary hover:text-accent-red transition-colors z-10"
             >
               <X className="size-3.5" />
@@ -95,8 +145,12 @@ export function UserSearchSelect({
                   exit={{ opacity: 0, y: 4 }}
                   className="absolute top-full left-0 right-0 mt-2 bg-bg-primary shadow-card shadow-border rounded-card z-30 max-h-[240px] overflow-y-auto p-1 space-y-1"
                 >
-                  {filteredUsers.length > 0 ? (
-                    filteredUsers.map((user) => (
+                  {isLoading ? (
+                    <div className="p-4 text-center text-xs text-text-secondary animate-pulse">
+                      Searching...
+                    </div>
+                  ) : users.length > 0 ? (
+                    users.map((user) => (
                       <UserCard
                         key={user.id}
                         name={user.name}
@@ -104,6 +158,7 @@ export function UserSearchSelect({
                         role={user.role}
                         onClick={() => {
                           onSelect(user.id, user.name);
+                          setSelectedUser(user);
                           setIsOpen(false);
                           setSearch("");
                         }}

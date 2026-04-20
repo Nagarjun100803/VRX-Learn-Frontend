@@ -1,11 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Download, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CoursesFilters } from "../components/CoursesFilters";
 import { CoursesList } from "../components/CoursesList";
 import { Pagination } from "../components/Pagination";
 import { CreateCourseDialog } from "../components/CreateCourseDialog";
-import { MOCK_COURSES, Course } from "../types";
+import { Course } from "../types";
+import { api } from "@/lib/api-client";
 
 export default function CoursesPage() {
   // Dialog State
@@ -13,70 +14,82 @@ export default function CoursesPage() {
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [selectedCourse, setSelectedCourse] = useState<Course | undefined>(undefined);
 
+  // Data State
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   // Filter States
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState("name-asc");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
 
   // Pagination States
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1); // ✅ ALWAYS 1-based
   const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
 
-  // Filtering & Sorting Logic
-  const filteredCourses = useMemo(() => {
-    let result = [...MOCK_COURSES];
+  // Debounce search (STRICT 400ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 400);
 
-    // Search (title + trainer)
-    if (search) {
-      const term = search.toLowerCase();
-      return result.filter(
-        (c) => 
-          c.title.toLowerCase().includes(term) || 
-          c.trainerName.toLowerCase().includes(term)
-      );
-    }
+    return () => clearTimeout(timer);
+  }, [search]);
 
-    // Sorting
-    result.sort((a, b) => {
-      switch (sortBy) {
-        case "name-asc":
-          return a.title.localeCompare(b.title);
-        case "name-desc":
-          return b.title.localeCompare(a.title);
-        case "newest":
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        case "oldest":
-          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-        case "trainees-asc":
-          return a.noOfTrainees - b.noOfTrainees;
-        case "trainees-desc":
-          return b.noOfTrainees - a.noOfTrainees;
-        default:
-          return 0;
+  // Fetch Logic
+  const fetchCourses = useCallback(async () => {
+    try {
+      setIsLoading(true);
+
+      const params: any = {
+        page: currentPage,
+        limit,
+      };
+
+      // 🔥 PRIORITY: SEARCH OVERRIDES ALL FILTERS
+      if (debouncedSearch) {
+        params.courseNameOrTrainerName = debouncedSearch;
+      } else {
+        // Sorting mapping
+        if (sortBy === "newest") params.sortByCreatedAt = "desc";
+        if (sortBy === "oldest") params.sortByCreatedAt = "asc";
+        if (sortBy === "name-asc") params.sortByCourseName = "asc";
+        if (sortBy === "name-desc") params.sortByCourseName = "desc";
+        if (sortBy === "trainees-asc") params.sortByNoOfTrainees = "asc";
+        if (sortBy === "trainees-desc") params.sortByNoOfTrainees = "desc";
       }
-    });
 
-    return result;
-  }, [search, sortBy]);
+      const res = await api.get("list/admin/courses", { params });
 
-  // Paginated Data
-  const totalItems = filteredCourses.length;
-  const totalPages = Math.ceil(totalItems / limit);
-  const paginatedCourses = filteredCourses.slice(
-    (currentPage - 1) * limit,
-    currentPage * limit
-  );
+      setCourses(res.data.data);
+      setTotalPages(res.data.totalPages);
+      setTotalItems(res.data.totalItems);
+
+      // ❌ DO NOT DO THIS:
+      // setCurrentPage(res.data.page);
+
+    } catch (err) {
+      console.error("Failed to fetch courses:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [debouncedSearch, sortBy, currentPage, limit]);
+
+  useEffect(() => {
+    fetchCourses();
+  }, [fetchCourses]);
 
   const handleSearchChange = (val: string) => {
     setSearch(val);
-    if (val) {
-      setSortBy("name-asc");
-    }
     setCurrentPage(1);
   };
 
   const handleClearFilters = () => {
     setSearch("");
-    setSortBy("name-asc");
+    setDebouncedSearch("");
+    setSortBy("newest");
     setCurrentPage(1);
   };
 
@@ -134,9 +147,14 @@ export default function CoursesPage() {
             onSortChange={(val) => { setSortBy(val); setCurrentPage(1); }}
           />
 
-          <div className="space-y-0">
+          <div className="space-y-0 relative">
+            {isLoading && (
+               <div className="absolute inset-0 bg-bg-primary/50 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-card">
+                 <div className="size-6 border-2 border-border-subtle border-t-text-primary rounded-full animate-spin" />
+               </div>
+            )}
             <CoursesList 
-              courses={paginatedCourses} 
+              courses={courses} 
               onClearFilters={handleClearFilters} 
               onEdit={handleEditCourse}
             />
@@ -146,8 +164,11 @@ export default function CoursesPage() {
                 totalPages={totalPages}
                 totalItems={totalItems}
                 limit={limit}
-                onPageChange={setCurrentPage}
-                onLimitChange={(val) => { setLimit(val); setCurrentPage(1); }}
+                onPageChange={(p) => setCurrentPage(p)}
+                onLimitChange={(val) => {
+                  setLimit(val);
+                  setCurrentPage(1);
+                }}
               />
             )}
           </div>

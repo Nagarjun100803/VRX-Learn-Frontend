@@ -1,39 +1,17 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
-const topCourses = [
-  {
-    id: "1",
-    courseName: "React Fundamentals",
-    trainerName: "John Doe",
-    totalTrainees: 120,
-  },
-  {
-    id: "2",
-    courseName: "FastAPI Mastery",
-    trainerName: "Jane Smith",
-    totalTrainees: 98,
-  },
-  {
-    id: "3",
-    courseName: "System Design",
-    trainerName: "Alex",
-    totalTrainees: 87,
-  },
-  {
-    id: "4",
-    courseName: "Database Internals",
-    trainerName: "Mike",
-    totalTrainees: 76,
-  },
-  {
-    id: "5",
-    courseName: "DevOps Basics",
-    trainerName: "Sara",
-    totalTrainees: 65,
-  },
-];
+interface TopCourse {
+  id: string;
+  courseName: string;
+  trainerName: string;
+  totalTrainees: number;
+}
 
-export function TopCourses() {
+interface TopCoursesProps {
+  courses: TopCourse[];
+}
+
+export function TopCourses({ courses }: TopCoursesProps) {
   return (
     <Card className="w-full">
       <CardHeader className="border-b border-border-subtle pb-4">
@@ -42,7 +20,7 @@ export function TopCourses() {
       </CardHeader>
       <CardContent className="p-0">
         <div className="divide-y divide-border-subtle">
-          {topCourses.map((course) => (
+          {courses.map((course) => (
             <div
               key={course.id}
               className="flex items-center justify-between p-4 hover:bg-bg-secondary transition-colors group"

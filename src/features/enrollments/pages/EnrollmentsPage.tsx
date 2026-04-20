@@ -1,11 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Download, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EnrollmentFilters } from "../components/EnrollmentFilters";
 import { EnrollmentList } from "../components/EnrollmentList";
 import { Pagination } from "../components/Pagination";
-import { MOCK_ENROLLMENTS, Enrollment } from "../types";
+import { Enrollment } from "../types";
 import { EnrollmentFormDialog } from "../components/EnrollmentFormDialog";
+import { api } from "@/lib/api-client";
 
 export default function EnrollmentsPage() {
   // Dialog State
@@ -13,79 +14,85 @@ export default function EnrollmentsPage() {
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | undefined>(undefined);
 
+  // Data State
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   // Filter States
   const [search, setSearch] = useState("");
-  const [role, setRole] = useState("all");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
   const [status, setStatus] = useState("all");
+  const [role, setRole] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
 
   // Pagination States
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1); // ✅ STRICT 1-based
   const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
 
-  // Filtering & Sorting Logic
-  const filteredEnrollments = useMemo(() => {
-    let result = [...MOCK_ENROLLMENTS];
+  // Debounce search (STRICT 400ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 400);
 
-    // Search (name/email)
-    if (search) {
-      const term = search.toLowerCase();
-      return result.filter(
-        (e) => 
-          e.name.toLowerCase().includes(term) || 
-          e.email.toLowerCase().includes(term)
-      );
-    }
+    return () => clearTimeout(timer);
+  }, [search]);
 
-    // Role Filter
-    if (role !== "all") {
-      result = result.filter((e) => e.role === role);
-    }
+  // Fetch Logic (CRITICAL)
+  const fetchEnrollments = useCallback(async () => {
+    try {
+      setIsLoading(true);
 
-    // Status Filter
-    if (status !== "all") {
-      result = result.filter((e) => e.status === status);
-    }
+      const params: any = {
+        page: currentPage,
+        limit,
+      };
 
-    // Sorting
-    result.sort((a, b) => {
-      switch (sortBy) {
-        case "newest":
-          return new Date(b.enrollmentDate).getTime() - new Date(a.enrollmentDate).getTime();
-        case "oldest":
-          return new Date(a.enrollmentDate).getTime() - new Date(b.enrollmentDate).getTime();
-        case "course-asc":
-          return a.courseName.localeCompare(b.courseName);
-        case "course-desc":
-          return b.courseName.localeCompare(a.courseName);
-        default:
-          return 0;
+      // 🔥 SEARCH overrides ALL filters
+      if (debouncedSearch) {
+        params.nameOrEmail = debouncedSearch;
+      } else {
+        if (status !== "all") params.status = status;
+        if (role !== "all") params.role = role;
+
+        // Sorting mapping
+        if (sortBy === "newest") params.sortByEnrollmentDate = "desc";
+        if (sortBy === "oldest") params.sortByEnrollmentDate = "asc";
+        if (sortBy === "course-asc") params.sortByCourseName = "asc";
+        if (sortBy === "course-desc") params.sortByCourseName = "desc";
       }
-    });
 
-    return result;
-  }, [search, role, status, sortBy]);
+      const res = await api.get("list/admin/enrollments", { params });
 
-  // Paginated Data
-  const totalItems = filteredEnrollments.length;
-  const totalPages = Math.ceil(totalItems / limit);
-  const paginatedEnrollments = filteredEnrollments.slice(
-    (currentPage - 1) * limit,
-    currentPage * limit
-  );
+      setEnrollments(res.data.data);
+      setTotalPages(res.data.totalPages);
+      setTotalItems(res.data.totalItems);
+
+      // ❌ DO NOT DO THIS:
+      // setCurrentPage(res.data.page);
+
+    } catch (err) {
+      console.error("Failed to fetch enrollments:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [debouncedSearch, status, role, sortBy, currentPage, limit]);
+
+  useEffect(() => {
+    fetchEnrollments();
+  }, [fetchEnrollments]);
 
   const handleSearchChange = (val: string) => {
     setSearch(val);
-    if (val) {
-      setRole("all");
-      setStatus("all");
-      setSortBy("newest");
-    }
     setCurrentPage(1);
   };
 
   const handleClearFilters = () => {
     setSearch("");
+    setDebouncedSearch("");
     setRole("all");
     setStatus("all");
     setSortBy("newest");
@@ -150,9 +157,14 @@ export default function EnrollmentsPage() {
             onSortChange={(val) => { setSortBy(val); setCurrentPage(1); }}
           />
 
-          <div className="space-y-0">
+          <div className="space-y-0 relative">
+            {isLoading && (
+               <div className="absolute inset-0 bg-bg-primary/50 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-card">
+                 <div className="size-6 border-2 border-border-subtle border-t-text-primary rounded-full animate-spin" />
+               </div>
+            )}
             <EnrollmentList 
-              enrollments={paginatedEnrollments} 
+              enrollments={enrollments} 
               onClearFilters={handleClearFilters} 
               onEdit={handleEditEnrollment}
             />
@@ -162,8 +174,11 @@ export default function EnrollmentsPage() {
                 totalPages={totalPages}
                 totalItems={totalItems}
                 limit={limit}
-                onPageChange={setCurrentPage}
-                onLimitChange={(val) => { setLimit(val); setCurrentPage(1); }}
+                onPageChange={(p) => setCurrentPage(p)}
+                onLimitChange={(val) => {
+                  setLimit(val);
+                  setCurrentPage(1);
+                }}
               />
             )}
           </div>
