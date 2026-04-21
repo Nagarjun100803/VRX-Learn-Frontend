@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 
@@ -19,7 +20,19 @@ export function LogoutDialog({ isOpen, onClose, onConfirm, isLoading }: LogoutDi
     return () => window.removeEventListener("keydown", handleEsc);
   }, [isOpen, onClose]);
 
-  return (
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
+
+  const modal = (
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -34,31 +47,34 @@ export function LogoutDialog({ isOpen, onClose, onConfirm, isLoading }: LogoutDi
 
           {/* Modal Card */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-            className="relative w-full max-w-md bg-bg-primary border border-border-subtle rounded-card shadow-border p-6 space-y-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+            className="relative w-full max-w-[400px] bg-bg-primary rounded-card shadow-border p-8 space-y-6"
           >
-            <div className="space-y-2 text-left">
-              <h2 className="text-lg font-semibold text-text-primary">Log out</h2>
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold tracking-tight text-text-primary">
+                Log out
+              </h2>
               <p className="text-sm text-text-secondary">
-                Are you sure you want to log out?
+                Are you sure you want to log out? You will need to sign in again to access your account.
               </p>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex gap-2 pt-2">
               <Button
                 variant="outline"
                 onClick={onClose}
                 disabled={isLoading}
+                className="flex-1 h-10 font-bold"
               >
                 Cancel
               </Button>
               <Button
                 onClick={onConfirm}
                 disabled={isLoading}
-                className="bg-text-primary text-bg-primary hover:opacity-90"
+                className="flex-1 h-10 bg-text-primary text-bg-primary hover:bg-text-primary/90 font-bold text-sm tracking-tight active:scale-[0.98] transition-all"
               >
                 {isLoading ? "Logging out..." : "Log out"}
               </Button>
@@ -68,4 +84,6 @@ export function LogoutDialog({ isOpen, onClose, onConfirm, isLoading }: LogoutDi
       )}
     </AnimatePresence>
   );
+
+  return createPortal(modal, document.body);
 }

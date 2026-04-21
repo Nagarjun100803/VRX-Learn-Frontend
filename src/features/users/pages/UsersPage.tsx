@@ -7,6 +7,7 @@ import { Pagination } from "../components/Pagination";
 import { CreateUserDialog } from "../components/CreateUserDialog";
 import { User } from "../types";
 import { api } from "@/lib/api-client";
+import { UsersTableSkeleton } from "@/features/admin/components/TableSkeletons";
 
 export default function UsersPage() {
   // Dialog State
@@ -93,6 +94,14 @@ export default function UsersPage() {
     setCurrentPage(1);
   };
 
+  const handleCreateSuccess = (newUser: User) => {
+    // Optimistic UI Update: Only append if we are on the first page
+    if (currentPage === 1) {
+      setUsers((prev) => [newUser, ...prev].slice(0, limit));
+      setTotalItems((prev) => prev + 1);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-bg-primary font-sans selection:bg-accent-blue/10">
       <main className="container-vercel py-12 space-y-8">
@@ -139,13 +148,12 @@ export default function UsersPage() {
           />
 
           <div className="space-y-0 relative">
-            {isLoading && (
-               <div className="absolute inset-0 bg-bg-primary/50 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-card">
-                 <div className="size-6 border-2 border-border-subtle border-t-text-primary rounded-full animate-spin" />
-               </div>
+            {isLoading ? (
+              <UsersTableSkeleton rows={limit} />
+            ) : (
+              <UsersList users={users} onClearFilters={handleClearFilters} />
             )}
-            <UsersList users={users} onClearFilters={handleClearFilters} />
-            {totalItems > 0 && (
+            {totalItems > 0 && !isLoading && (
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
@@ -162,6 +170,7 @@ export default function UsersPage() {
       <CreateUserDialog 
         isOpen={isCreateDialogOpen} 
         onClose={() => setIsCreateDialogOpen(false)} 
+        onSuccess={handleCreateSuccess}
       />
     </div>
   );

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/useToast";
 import { UserSearchSelect } from "./UserSearchSelect";
 import { MarkdownEditor } from "@/components/MarkdownEditor";
+import { api } from "@/lib/api-client";
 
 interface CourseFormDialogProps {
   isOpen: boolean;
@@ -19,9 +20,10 @@ interface CourseFormDialogProps {
     trainerId: string;
     trainerName: string;
   };
+  onSuccess?: () => void;
 }
 
-export function CreateCourseDialog({ isOpen, onClose, mode, initialData }: CourseFormDialogProps) {
+export function CreateCourseDialog({ isOpen, onClose, mode, initialData, onSuccess }: CourseFormDialogProps) {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     title: "",
@@ -97,8 +99,19 @@ export function CreateCourseDialog({ isOpen, onClose, mode, initialData }: Cours
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const payload = {
+        title: formData.title,
+        shortDescription: formData.shortDescription || null,
+        longDescription: formData.longDescription || null,
+        thumbnail: null,
+        trainerId: formData.trainerId
+      };
+
+      if (mode === "create") {
+        await api.post("courses", { ...payload, details: { type: "live" } });
+      } else {
+        await api.patch(`courses/update-basic-info/${initialData?.id}`, payload);
+      }
 
       toast({
         type: "success",
@@ -106,13 +119,31 @@ export function CreateCourseDialog({ isOpen, onClose, mode, initialData }: Cours
         description: `${formData.title} has been ${mode === "create" ? "added to" : "updated in"} the catalog.`,
       });
       
+      onSuccess?.();
       onClose();
-    } catch (error) {
-      setGlobalError("Something went wrong. Please try again.");
+    } catch (error: any) {
+      const apiError = error.response?.data;
+      
+      let friendlyMessage = "Something went wrong. Please try again.";
+      
+      if (apiError && apiError.type) {
+        if (apiError.type === "CourseAlreadyExistsError") {
+          setErrors(prev => ({ ...prev, title: "This course title already exists. Try a different name." }));
+        } else if (apiError.type === "UserNotFoundError") {
+          setErrors(prev => ({ ...prev, trainerId: "Selected trainer no longer exists." }));
+        } else if (apiError.type === "InvalidRoleError") {
+          setErrors(prev => ({ ...prev, trainerId: "Selected user is not a trainer." }));
+        } else {
+          setGlobalError(friendlyMessage);
+        }
+      } else {
+        setGlobalError(friendlyMessage);
+      }
+
       toast({
         type: "error",
-        title: mode === "create" ? "Failed to create course" : "Failed to update course",
-        description: "An unexpected error occurred.",
+        title: "Failed to create course",
+        description: friendlyMessage,
       });
     } finally {
       setIsSubmitting(false);

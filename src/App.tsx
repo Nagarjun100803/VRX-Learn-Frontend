@@ -8,6 +8,7 @@ import LoginPage from "@/features/auth/pages/LoginPage";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ToastProvider } from "@/components/ui/Toast";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { DevDebugPanel } from "@/components/DevDebugPanel";
 
 function AppContent() {
   const { user, isLoading } = useAuth();
@@ -24,6 +25,7 @@ function AppContent() {
   return (
     <>
       <ScrollToTop />
+      <DevDebugPanel />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
 

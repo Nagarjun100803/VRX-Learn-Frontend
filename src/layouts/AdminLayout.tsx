@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import AdminDashboard from "@/features/admin/pages/AdminDashboard";
 import UsersPage from "@/features/users/pages/UsersPage";
@@ -7,6 +8,7 @@ import { CourseOverviewPage } from "@/features/trainer/pages/CourseOverviewPage"
 import { CourseContentPage } from "@/features/trainer/pages/CourseContentPage";
 import { TraineeRosterPage } from "@/features/trainer/pages/TraineeRosterPage";
 import { TopNav } from "@/features/admin/components/TopNav";
+import { MobileSidebar } from "./MobileSidebar";
 
 const navItems = [
   { label: "Dashboard", path: "/admin" },
@@ -18,6 +20,7 @@ const navItems = [
 export function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const getActiveTab = () => {
     const active = navItems.find(item => item.path === location.pathname);
@@ -28,10 +31,18 @@ export function AdminLayout() {
     <div className="min-h-screen bg-bg-primary">
       <TopNav 
         activeTab={getActiveTab()} 
+        navItems={navItems}
         onTabChange={(tab) => {
           const item = navItems.find(i => i.label === tab);
           if (item) navigate(item.path);
         }} 
+        onMenuClick={() => setIsSidebarOpen(true)}
+      />
+
+      <MobileSidebar 
+        isOpen={isSidebarOpen} 
+        onClose={() => setIsSidebarOpen(false)} 
+        role="admin" 
       />
       
       <Routes>

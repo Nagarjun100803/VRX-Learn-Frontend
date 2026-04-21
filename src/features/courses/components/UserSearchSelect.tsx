@@ -34,30 +34,29 @@ export function UserSearchSelect({
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
-    }, 400);
+    }, 450);
     return () => clearTimeout(timer);
   }, [search]);
 
   // Fetch users when searching or opening
   useEffect(() => {
-    if (!isOpen && !debouncedSearch) return;
+    // STRICT GUARD: Do not call if search is empty or whitespace
+    if (!debouncedSearch || debouncedSearch.trim().length === 0) {
+      setUsers([]);
+      setIsLoading(false);
+      return;
+    }
 
     const fetchUsers = async () => {
       try {
         setIsLoading(true);
         const params: any = {
-          limit: 10,
-          page: 1
+          role: role,
+          username_or_email: debouncedSearch.trim(),
         };
 
-        if (debouncedSearch) {
-          params.nameOrEmail = debouncedSearch;
-        } else if (role !== "all") {
-          params.role = role;
-        }
-
-        const res = await api.get("list/admin/users", { params });
-        setUsers(res.data.data);
+        const res = await api.get("admin/search/users", { params });
+        setUsers(res.data);
       } catch (error) {
         console.error("Failed to fetch users in select:", error);
       } finally {
@@ -66,28 +65,37 @@ export function UserSearchSelect({
     };
 
     fetchUsers();
-  }, [debouncedSearch, isOpen, role]);
+  }, [debouncedSearch, role]);
 
   // Fetch selected user if only ID is provided
   useEffect(() => {
-    if (selectedId && !selectedUser) {
+    if (selectedId && (!selectedUser || selectedUser.id !== selectedId)) {
       const fetchSelected = async () => {
         try {
-          // We don't have a single user fetch yet, so we query by id (assuming nameOrEmail can handle ids or just filter list)
-          // For now, let's just try to find it in the list or just leave it blank if not found
-          const res = await api.get("list/admin/users", { params: { limit: 1, nameOrEmail: selectedId } });
-          if (res.data.data.length > 0) {
-            setSelectedUser(res.data.data[0]);
+          // Use the admin search endpoint with the ID if possible, 
+          // or rely on the existing logic that searches by name/email (which might work for ID if backend supports it).
+          // Actually, let's just attempt to see if there's a specific trainer search that accepts ID.
+          // The search endpoint /admin/search/users supports username_or_email.
+          const params = {
+            role: role,
+            username_or_email: selectedId
+          };
+          const res = await api.get("admin/search/users", { params });
+          if (Array.isArray(res.data) && res.data.length > 0) {
+            setSelectedUser(res.data[0]);
+          } else {
+            setSelectedUser(null);
           }
         } catch (error) {
           console.error("Failed to fetch selected user:", error);
+          setSelectedUser(null);
         }
       };
       fetchSelected();
     } else if (!selectedId) {
       setSelectedUser(null);
     }
-  }, [selectedId, selectedUser]);
+  }, [selectedId]);
 
   return (
     <div className={`space-y-1.5 relative ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}>

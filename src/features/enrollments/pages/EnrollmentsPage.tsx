@@ -7,6 +7,7 @@ import { Pagination } from "../components/Pagination";
 import { Enrollment } from "../types";
 import { EnrollmentFormDialog } from "../components/EnrollmentFormDialog";
 import { api } from "@/lib/api-client";
+import { EnrollmentsTableSkeleton } from "@/features/admin/components/TableSkeletons";
 
 export default function EnrollmentsPage() {
   // Dialog State
@@ -158,17 +159,16 @@ export default function EnrollmentsPage() {
           />
 
           <div className="space-y-0 relative">
-            {isLoading && (
-               <div className="absolute inset-0 bg-bg-primary/50 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-card">
-                 <div className="size-6 border-2 border-border-subtle border-t-text-primary rounded-full animate-spin" />
-               </div>
+            {isLoading ? (
+              <EnrollmentsTableSkeleton rows={limit} />
+            ) : (
+              <EnrollmentList 
+                enrollments={enrollments} 
+                onClearFilters={handleClearFilters} 
+                onEdit={handleEditEnrollment}
+              />
             )}
-            <EnrollmentList 
-              enrollments={enrollments} 
-              onClearFilters={handleClearFilters} 
-              onEdit={handleEditEnrollment}
-            />
-            {totalItems > 0 && (
+            {totalItems > 0 && !isLoading && (
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
